@@ -8,16 +8,18 @@ import { AdminPage } from './AdminPage'
 afterEach(() => vi.unstubAllGlobals())
 
 describe('AdminPage', () => {
-  it('shows classes with seat usage and totals', async () => {
-    mockFetch([route('GET', '/classes', () => ({ body: [makeClass(), makeClass({ id: 'c2', name: 'Class 2', capacity: 5, heldSeats: 0, confirmedSeats: 5, availableSeats: 0 })] }))])
+  it('shows total, held, admitted and available seats per class with totals', async () => {
+    mockFetch([
+      route('GET', '/classes', () => ({
+        body: [makeClass(), makeClass({ id: 'c2', name: 'Class 6 - Day Shift', totalSeats: 5, heldSeats: 0, confirmedSeats: 5, availableSeats: 0 })],
+      })),
+    ])
 
     render(<AdminPage />)
 
-    const row = (await screen.findByText('Class 2')).closest('tr')!
-    expect(within(row).getAllByRole('cell').map((c) => c.textContent)).toEqual(
-      expect.arrayContaining(['Class 2', 'MORNING', '5', '5', '0', '0']),
-    )
-    expect(screen.getByText('Total seats').nextSibling).toHaveTextContent('15')
+    const row = (await screen.findByText('Class 6 - Day Shift')).closest('tr')!
+    expect(within(row).getAllByRole('cell').slice(0, 5).map((c) => c.textContent)).toEqual(['Class 6 - Day Shift', '5', '5', '0', '0'])
+    expect(screen.getByText('Total seats', { selector: 'dt' }).nextSibling).toHaveTextContent('15')
     expect(screen.getByText('Available', { selector: 'dt' }).nextSibling).toHaveTextContent('5')
   })
 
@@ -33,48 +35,47 @@ describe('AdminPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(/Cannot reach the server/)
   })
 
-  it('creates a class and refreshes the list', async () => {
+  it('creates a class with name and totalSeats and refreshes the list', async () => {
     let classes = [makeClass()]
     const { calls } = mockFetch([
       route('GET', '/classes', () => ({ body: classes })),
       route('POST', '/classes', (call) => {
-        const created = makeClass({ id: 'new', ...(call.body as object), heldSeats: 0, confirmedSeats: 0, availableSeats: 40 })
+        const created = makeClass({ id: 'new', ...(call.body as object), heldSeats: 0, confirmedSeats: 0, availableSeats: 120 })
         classes = [...classes, created]
         return { status: 201, body: created }
       }),
     ])
     const user = userEvent.setup()
     render(<AdminPage />)
-    await screen.findByText('Class 1')
+    await screen.findByText('Class 6 - Morning Shift')
 
-    await user.type(screen.getByLabelText('Class name'), 'Class 6')
-    await user.selectOptions(screen.getByLabelText('Shift'), 'DAY')
-    await user.clear(screen.getByLabelText('Seat capacity'))
-    await user.type(screen.getByLabelText('Seat capacity'), '40')
+    await user.type(screen.getByLabelText('Class name'), 'Class 7 - Day Shift')
+    await user.clear(screen.getByLabelText('Total seats'))
+    await user.type(screen.getByLabelText('Total seats'), '120')
     await user.click(screen.getByRole('button', { name: 'Create class' }))
 
-    expect(await screen.findByText(/Created Class 6 \(DAY\) with 40 seats/)).toBeInTheDocument()
-    expect(calls.find((c) => c.method === 'POST')?.body).toEqual({ name: 'Class 6', shift: 'DAY', capacity: 40 })
-    expect(await screen.findByText('Class 6')).toBeInTheDocument()
+    expect(await screen.findByText(/Created "Class 7 - Day Shift" with 120 seats/)).toBeInTheDocument()
+    expect(calls.find((c) => c.method === 'POST')?.body).toEqual({ name: 'Class 7 - Day Shift', totalSeats: 120 })
+    expect(await screen.findByRole('cell', { name: 'Class 7 - Day Shift' })).toBeInTheDocument()
   })
 
-  it('validates capacity before calling the API and shows server errors', async () => {
+  it('validates seats before calling the API and shows server errors', async () => {
     const { calls } = mockFetch([
       route('GET', '/classes', () => ({ body: [] })),
-      route('POST', '/classes', () => ({ status: 409, body: { error: { code: 'CLASS_ALREADY_EXISTS', message: "Class 'X' already exists in the MORNING shift." } } })),
+      route('POST', '/classes', () => ({ status: 409, body: { error: { code: 'CLASS_ALREADY_EXISTS', message: "A class named 'X' already exists." } } })),
     ])
     const user = userEvent.setup()
     render(<AdminPage />)
 
     await user.type(screen.getByLabelText('Class name'), 'X')
-    await user.clear(screen.getByLabelText('Seat capacity'))
-    await user.type(screen.getByLabelText('Seat capacity'), '0')
+    await user.clear(screen.getByLabelText('Total seats'))
+    await user.type(screen.getByLabelText('Total seats'), '0')
     await user.click(screen.getByRole('button', { name: 'Create class' }))
-    expect(screen.getByRole('alert')).toHaveTextContent(/1 to 1000/)
+    expect(screen.getByRole('alert')).toHaveTextContent(/1 to 10000/)
     expect(calls.some((c) => c.method === 'POST')).toBe(false)
 
-    await user.clear(screen.getByLabelText('Seat capacity'))
-    await user.type(screen.getByLabelText('Seat capacity'), '10')
+    await user.clear(screen.getByLabelText('Total seats'))
+    await user.type(screen.getByLabelText('Total seats'), '10')
     await user.click(screen.getByRole('button', { name: 'Create class' }))
     expect(await screen.findByRole('alert')).toHaveTextContent(/already exists/)
   })
