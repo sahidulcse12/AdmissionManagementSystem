@@ -2,14 +2,19 @@
 
 > Bangla version: [API.bn.md](API.bn.md)
 
-Base URL: `http://localhost:8080`. All bodies are JSON. Timestamps are ISO-8601 UTC.
+Base URL: `http://localhost:8080`. All requests and responses are JSON. Timestamps are ISO-8601 UTC.
+Responses contain every field required by the assignment contract; a few extra fields are added
+(allowed by the contract) to help the UI.
 
 ## Conventions
 
-**Student identity.** Endpoints that act for a student require the header
+**Each shift is its own class.** "Class 6 - Morning Shift" and "Class 6 - Day Shift" are two classes,
+each with its own `totalSeats`.
+
+**Student identity.** Endpoints that act for a student take the header
 `X-Student-Id: <17-digit birth registration number>`. There is no other authentication.
 
-**Errors** always have this shape:
+**Errors** always have this shape (never a 500 for bad input):
 
 ```json
 { "error": { "code": "NO_SEATS_AVAILABLE", "message": "No seats are available in this class." } }
@@ -22,111 +27,106 @@ Base URL: `http://localhost:8080`. All bodies are JSON. Timestamps are ISO-8601 
 | 404 | `CLASS_NOT_FOUND`, `HOLD_NOT_FOUND` |
 | 409 | `CLASS_ALREADY_EXISTS`, `NO_SEATS_AVAILABLE`, `ACTIVE_HOLD_EXISTS`, `ALREADY_ADMITTED`, `HOLD_CANCELLED`, `HOLD_ALREADY_CONFIRMED` |
 | 410 | `HOLD_EXPIRED` |
-| 500 | `INTERNAL_ERROR` |
-
-## Objects
-
-**Class**
-
-```json
-{
-  "id": "6b0f…", "name": "Class 1", "shift": "MORNING", "capacity": 30,
-  "heldSeats": 2, "confirmedSeats": 10, "availableSeats": 18,
-  "createdAt": "2026-11-27T05:00:00.123456+00:00"
-}
-```
-
-**Hold**
-
-```json
-{
-  "id": "a91c…", "classId": "6b0f…", "className": "Class 1", "shift": "MORNING",
-  "studentId": "20150123456789012", "status": "HELD",
-  "createdAt": "…", "expiresAt": "…", "confirmedAt": null, "cancelledAt": null,
-  "remainingSeconds": 598, "serverTime": "…"
-}
-```
-
-`status` is one of `HELD`, `CONFIRMED`, `EXPIRED`, `CANCELLED`. A `HELD` hold past `expiresAt`
-is returned as `EXPIRED`. `remainingSeconds` is `0` unless the hold is `HELD`.
 
 ## Endpoints
 
-### `POST /classes` — create a class (admin)
+### 1. `POST /classes` — create a class
 
 ```json
-{ "name": "Class 1", "shift": "MORNING", "capacity": 30 }
+// request
+{ "name": "Class 6 - Morning Shift", "totalSeats": 120 }
+
+// 201 response (Location: /classes/{id})
+{ "id": "6b0f…", "name": "Class 6 - Morning Shift", "totalSeats": 120,
+  "heldSeats": 0, "confirmedSeats": 0, "availableSeats": 120, "createdAt": "…" }
 ```
 
-- `shift`: `MORNING`, `DAY` or `EVENING` (case-insensitive). `capacity`: 1–1000. `name`: 1–100 chars.
-- `201 Created` + `Location: /classes/{id}` + Class.
-- `400 VALIDATION_ERROR`; `409 CLASS_ALREADY_EXISTS` (same name in the same shift, case-insensitive).
+- `name`: 1–100 characters, unique (case-insensitive). `totalSeats`: whole number 1–10000.
+- `400 VALIDATION_ERROR` / `INVALID_REQUEST`; `409 CLASS_ALREADY_EXISTS`.
 
-### `GET /classes` — list classes with live seat counts
+### 2. `GET /classes` — all classes with seat counts
 
-`200` + `Class[]`, sorted by name then shift.
+```json
+[ { "id": "6b0f…", "name": "Class 6 - Morning Shift", "totalSeats": 120,
+    "heldSeats": 15, "confirmedSeats": 80, "availableSeats": 25, "createdAt": "…" } ]
+```
 
-### `GET /classes/{classId}` — one class
+### 3. `GET /classes/{classId}` — one class's seats
 
-`200` + Class · `400 INVALID_ID` · `404 CLASS_NOT_FOUND`.
+Same object as above. `400 INVALID_ID` · `404 CLASS_NOT_FOUND`.
 
-### `GET /classes/{classId}/holds` — holds and admissions of a class (admin)
-
-`200` + `Hold[]`, newest first · `404 CLASS_NOT_FOUND`.
-
-### `POST /classes/{classId}/holds` — reserve a seat
+### 4. `POST /classes/{classId}/holds` — apply (hold a seat)
 
 Header `X-Student-Id` required. No body.
 
-- `201 Created` + `Location: /holds/{id}` + Hold (`status: HELD`, `expiresAt = now + HOLD_DURATION_SECONDS`).
-- `400 MISSING_STUDENT_ID | INVALID_STUDENT_ID | INVALID_ID`
-- `404 CLASS_NOT_FOUND`
-- `409 NO_SEATS_AVAILABLE` — class is full.
-- `409 ACTIVE_HOLD_EXISTS` — the student already holds a seat in this class.
-- `409 ALREADY_ADMITTED` — the student is already admitted to this class.
+```json
+// 201 response (Location: /holds/{holdId})
+{ "holdId": "a91c…", "classId": "6b0f…", "className": "Class 6 - Morning Shift",
+  "studentId": "20152691234567890", "status": "HELD", "expiresAt": "2026-11-01T04:10:00+00:00",
+  "createdAt": "…", "confirmedAt": null, "cancelledAt": null, "remainingSeconds": 600, "serverTime": "…" }
+```
 
-### `GET /holds/{holdId}` — read a hold (owner only)
+- `409 NO_SEATS_AVAILABLE` — no seat left.
+- `409 ACTIVE_HOLD_EXISTS` / `409 ALREADY_ADMITTED` — the student already has an active application or admission in this class.
+- `400 MISSING_STUDENT_ID | INVALID_STUDENT_ID | INVALID_ID` · `404 CLASS_NOT_FOUND`.
 
-`200` + Hold · `403 HOLD_NOT_OWNED` · `404 HOLD_NOT_FOUND`.
+### 5. `GET /holds/{holdId}` — current status of an application
 
-### `POST /holds/{holdId}/confirm` — confirm admission (payment assumed successful)
+```json
+{ "holdId": "a91c…", "classId": "6b0f…", "status": "HELD", "expiresAt": "…", … }
+```
 
-Owner only. **Idempotent**: repeating the call returns `200` with the same body and does not
-create another admission.
+`status` is `HELD`, `CONFIRMED`, `EXPIRED` or `CANCELLED`. A `HELD` hold past `expiresAt` is
+reported as `EXPIRED` immediately. `X-Student-Id` is optional here (the contract does not list it);
+if it is sent and belongs to another student the answer is `403 HOLD_NOT_OWNED`. `404 HOLD_NOT_FOUND`.
 
-- `200` + Hold (`status: CONFIRMED`)
-- `403 HOLD_NOT_OWNED` · `404 HOLD_NOT_FOUND`
-- `409 HOLD_CANCELLED` — cancelled holds cannot be confirmed.
-- `410 HOLD_EXPIRED` — expired holds cannot be confirmed.
+### 6. `POST /holds/{holdId}/confirm` — pay admission fee, confirm admission
 
-### `DELETE /holds/{holdId}` — cancel a hold
+Header `X-Student-Id` required (owner only). Payment is assumed successful.
 
-Owner only. Releases the seat immediately. Repeating the call returns `200` (no-op).
+```json
+// 200 response
+{ "holdId": "a91c…", "status": "CONFIRMED", "confirmedAt": "…", … }
+```
 
-- `200` + Hold (`status: CANCELLED`)
-- `403 HOLD_NOT_OWNED` · `404 HOLD_NOT_FOUND`
-- `409 HOLD_ALREADY_CONFIRMED` — a confirmed admission cannot be cancelled.
-- `410 HOLD_EXPIRED`
+- Idempotent: confirming again returns `200` with the same body; `confirmedSeats` increases only once.
+- `410 HOLD_EXPIRED` · `409 HOLD_CANCELLED` · `403 HOLD_NOT_OWNED` · `404 HOLD_NOT_FOUND`.
 
-### `GET /me/holds` — the student's history
+### 7. `DELETE /holds/{holdId}` — cancel an application
 
-Header `X-Student-Id` required. `200` + `Hold[]`, newest first, all statuses.
+Header `X-Student-Id` required (owner only). Success: **`204 No Content`**; the seat is released.
+Repeating the call also returns `204`.
 
-### `GET /health`
+- `409 HOLD_ALREADY_CONFIRMED` (a confirmed admission is final) · `410 HOLD_EXPIRED` · `403` · `404`.
 
-`200 {"status":"ok"}` — used by the Docker health check.
+### 8. `GET /me/holds` — all applications of this student
+
+Header `X-Student-Id` required. Newest first, every status.
+
+```json
+[ { "holdId": "a91c…", "classId": "6b0f…", "className": "Class 6 - Morning Shift",
+    "status": "HELD", "expiresAt": "…", … } ]
+```
+
+### Extra endpoints
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /classes/{classId}/holds` | Admin view of every application/admission in a class |
+| `GET /health` | `{"status":"ok"}` for the Docker health check |
 
 ## Example session (curl)
 
 ```bash
 API=http://localhost:8080
-STUDENT=20150123456789012
+STUDENT=20152691234567890
 
 CLASS=$(curl -s -X POST $API/classes -H 'Content-Type: application/json' \
-  -d '{"name":"Class 1","shift":"MORNING","capacity":2}' | jq -r .id)
+  -d '{"name":"Class 6 - Morning Shift","totalSeats":120}' | jq -r .id)
 
-HOLD=$(curl -s -X POST $API/classes/$CLASS/holds -H "X-Student-Id: $STUDENT" | jq -r .id)
+HOLD=$(curl -s -X POST $API/classes/$CLASS/holds -H "X-Student-Id: $STUDENT" | jq -r .holdId)
 
-curl -s -X POST $API/holds/$HOLD/confirm -H "X-Student-Id: $STUDENT" | jq .status   # "CONFIRMED"
+curl -s $API/holds/$HOLD | jq .status                                          # "HELD"
+curl -s -X POST $API/holds/$HOLD/confirm -H "X-Student-Id: $STUDENT" | jq .status  # "CONFIRMED"
 curl -s $API/me/holds -H "X-Student-Id: $STUDENT" | jq '.[].status'
 ```

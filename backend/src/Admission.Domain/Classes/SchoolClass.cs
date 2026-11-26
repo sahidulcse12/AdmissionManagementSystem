@@ -2,61 +2,50 @@ using Admission.Domain.Common;
 
 namespace Admission.Domain.Classes;
 
-/// <summary>A class offered in a specific shift with a fixed number of seats.</summary>
+/// <summary>
+/// An admission unit with a fixed number of seats. Each shift is its own class,
+/// e.g. "Class 6 - Morning Shift" and "Class 6 - Day Shift".
+/// </summary>
 public sealed class SchoolClass
 {
     public const int NameMaxLength = 100;
-    public const int MinCapacity = 1;
-    public const int MaxCapacity = 1000;
+    public const int MinSeats = 1;
+    public const int MaxSeats = 10_000;
 
     private SchoolClass() { } // EF Core
 
     public Guid Id { get; private set; }
     public string Name { get; private set; } = string.Empty;
 
-    /// <summary>Upper-cased name used for case-insensitive uniqueness per shift.</summary>
+    /// <summary>Upper-cased name used for case-insensitive uniqueness.</summary>
     public string NormalizedName { get; private set; } = string.Empty;
 
-    public Shift Shift { get; private set; }
-    public int Capacity { get; private set; }
+    public int TotalSeats { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
 
-    public static SchoolClass Create(string? name, string? shift, int? capacity, DateTimeOffset now)
+    public static SchoolClass Create(string? name, int? totalSeats, DateTimeOffset now)
     {
         var trimmed = name?.Trim();
         if (string.IsNullOrEmpty(trimmed))
-            throw new DomainException("VALIDATION_ERROR", "Name is required.");
+            throw new DomainException("VALIDATION_ERROR", "Class name is required.");
         if (trimmed.Length > NameMaxLength)
-            throw new DomainException("VALIDATION_ERROR", $"Name must be at most {NameMaxLength} characters.");
+            throw new DomainException("VALIDATION_ERROR", $"Class name must be at most {NameMaxLength} characters.");
 
         return new SchoolClass
         {
             Id = Guid.NewGuid(),
             Name = trimmed,
             NormalizedName = Normalize(trimmed),
-            Shift = ParseShift(shift),
-            Capacity = ValidateCapacity(capacity),
+            TotalSeats = ValidateSeats(totalSeats),
             CreatedAt = now,
         };
     }
 
     public static string Normalize(string name) => name.Trim().ToUpperInvariant();
 
-    public static Shift ParseShift(string? value)
-    {
-        if (!string.IsNullOrWhiteSpace(value)
-            && Enum.TryParse<Shift>(value.Trim(), ignoreCase: true, out var shift)
-            && Enum.IsDefined(shift)
-            && !int.TryParse(value, out _))
-            return shift;
-
-        throw new DomainException("VALIDATION_ERROR",
-            $"Shift must be one of: {string.Join(", ", Enum.GetNames<Shift>())}.");
-    }
-
-    private static int ValidateCapacity(int? capacity) =>
-        capacity is { } value && value is >= MinCapacity and <= MaxCapacity
+    private static int ValidateSeats(int? totalSeats) =>
+        totalSeats is { } value && value is >= MinSeats and <= MaxSeats
             ? value
             : throw new DomainException("VALIDATION_ERROR",
-                $"Capacity must be between {MinCapacity} and {MaxCapacity}.");
+                $"totalSeats must be a whole number between {MinSeats} and {MaxSeats}.");
 }

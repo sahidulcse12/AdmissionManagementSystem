@@ -2,17 +2,22 @@
 
 > বাংলা: [README.bn.md](README.bn.md)
 
-A first-come-first-served school admission system. Parents reserve a seat in a class and shift,
-hold it for a limited time (10 minutes by default), and confirm admission. Admins create classes,
-set seat capacity and watch seats fill up. The system never admits more students than a class's
-capacity, even when many parents click at the same moment.
+A first-come-first-served school admission system. Parents apply for a seat in a class, the seat is
+held for a limited time (10 minutes by default), and paying the admission fee confirms the admission.
+Admins create classes with a number of seats and watch them fill up. The system never admits more
+students than `totalSeats`, even when many parents apply at the same moment — and even with two backend
+processes on the same database.
+
+Each shift is its own class, e.g. "Class 6 - Morning Shift" and "Class 6 - Day Shift".
 
 ## Features
 
-- **Admin:** create classes per shift with a seat capacity; live table of admitted / held / available
-  seats; per-class list of holds and admissions.
-- **Parent / guardian:** identify the student by birth registration number; see available seats;
-  reserve a seat; live countdown; pay-and-confirm (payment is simulated) or cancel; admission history.
+- **Student ID box at the top of the page** (17-digit birth registration number); no login.
+- **Admin:** create a class with name and total seats; live table of total / held / confirmed /
+  available seats; per-class list of applications and admissions.
+- **Parent / guardian:** class list with seat counts and an **"আবেদন করুন" (Apply)** button; the
+  application shows its status and time left with **"ভর্তি ফি দিন" (Pay admission fee)** and
+  **"বাতিল" (Cancel)**; **"আমার আবেদন" (My applications)** lists every application and its status.
 - **Strict first-come-first-served**: no lottery; the order requests reach the database decides.
 - **Seat holds** with configurable duration; expired holds free their seat automatically.
 - **Concurrency-safe**: row-level locks, transactions, and a partial unique index, verified with
@@ -51,11 +56,24 @@ automatically when the API starts. Data is stored in the `pgdata` Docker volume 
 
 ### Try it
 
-1. Open the **Admin** tab and create a class, e.g. `Class 1`, `MORNING`, capacity `2`.
-2. Open the **Parent / Guardian** tab, enter a 17-digit number such as `20150123456789012`.
-3. Click **Reserve seat** — a 10-minute countdown appears.
-4. Click **Pay & confirm admission** — the seat moves to *Admitted* in history and in the admin table.
-5. Use **Change student** with another number to see seats run out and the class show **Full**.
+1. Open the **Admin** tab and create a class, e.g. name `Class 6 - Morning Shift`, total seats `2`.
+2. In the box at the top of the page, enter a 17-digit number such as `20150123456789012`.
+3. On the **Parent / Guardian** tab click **আবেদন করুন (Apply)** — the application shows a 10-minute countdown.
+4. Click **ভর্তি ফি দিন (Pay admission fee)** — status becomes *Admitted* in "My applications" and in the admin table.
+5. Click **Change** at the top, use another number, and watch the seats run out and the class show **Full**.
+
+To see expiry quickly: `HOLD_DURATION_SECONDS=30 docker compose up` — after 30 s the application shows
+**EXPIRED** without reloading and the pay button is disabled.
+
+### Bonus: two backend processes on one database
+
+```bash
+docker compose --profile multi up --build
+```
+
+This also starts `api2` on http://localhost:8081, sharing the same PostgreSQL. Both APIs can be used at
+once; `held + confirmed` still never exceeds `totalSeats`. How this is guaranteed is explained in
+[ASSUMPTIONS.md](ASSUMPTIONS.md#bonus-two-backend-processes-on-one-database).
 
 ## Configuration
 
@@ -67,6 +85,7 @@ All settings are environment variables (see [.env.example](.env.example)).
 | `EXPIRY_SWEEP_SECONDS` | `15` | api | How often overdue holds are marked `EXPIRED` in the database. |
 | `CORS_ORIGINS` | `*` | api | Allowed browser origins (comma-separated). |
 | `API_PORT` | `8080` | api | Host port for the API. |
+| `API2_PORT` | `8081` | api2 | Host port for the optional second API (`--profile multi`). |
 | `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | `admission` | db, api | Database credentials; the API connection string is built from them. |
 | `POSTGRES_PORT` | `5432` | db | Host port for PostgreSQL. |
 | `API_URL` | `http://localhost:8080` | web | API address used by the browser; written to `config.js` at container start. |
@@ -92,15 +111,15 @@ Details, diagrams and the full scenario table: [ARCHITECTURE.md](ARCHITECTURE.md
 
 | Method | Path | Purpose |
 |---|---|---|
-| `POST` | `/classes` | Create a class |
-| `GET` | `/classes` | List classes with live seat counts |
-| `GET` | `/classes/{classId}` | One class |
-| `POST` | `/classes/{classId}/holds` | Reserve a seat (`X-Student-Id` required) |
-| `GET` | `/holds/{holdId}` | Read a hold (owner only) |
-| `POST` | `/holds/{holdId}/confirm` | Confirm admission (owner only, idempotent) |
-| `DELETE` | `/holds/{holdId}` | Cancel a hold (owner only) |
-| `GET` | `/me/holds` | The student's hold and admission history |
-| `GET` | `/classes/{classId}/holds` | Admin: holds and admissions of a class |
+| `POST` | `/classes` | Create a class — body `{ "name", "totalSeats" }` → `201` |
+| `GET` | `/classes` | All classes with `totalSeats`, `heldSeats`, `confirmedSeats`, `availableSeats` |
+| `GET` | `/classes/{classId}` | One class's seats |
+| `POST` | `/classes/{classId}/holds` | Apply / hold a seat (`X-Student-Id`) → `201`, `409` if no seat |
+| `GET` | `/holds/{holdId}` | Current status of an application (`holdId`, `status`, `expiresAt`, …) |
+| `POST` | `/holds/{holdId}/confirm` | Pay admission fee, confirm (owner only, idempotent) → `200` |
+| `DELETE` | `/holds/{holdId}` | Cancel an application (owner only) → `204` |
+| `GET` | `/me/holds` | All applications of this student |
+| `GET` | `/classes/{classId}/holds` | Extra: admin list of a class's applications |
 
 Request/response formats and every error code: [API.md](API.md).
 
@@ -110,13 +129,17 @@ Backend tests start a throwaway PostgreSQL container, so Docker must be running.
 
 ```bash
 cd backend
-dotnet test                       # 56 tests: domain rules, API, expiry, races
+dotnet test                       # 63 tests: contract, domain rules, expiry, races, two instances
 ```
+
+The concurrency tests are `ConcurrencyTests` (e.g. 50 students racing for 5 seats → exactly 5 holds),
+`AdmissionConcurrencyTests` and `MultiInstanceTests` (two backend hosts on one database).
+Backend tests need the .NET 9 SDK and a running Docker daemon.
 
 ```bash
 cd frontend
 npm ci
-npm test                          # 19 tests: admin and parent flows
+npm test                          # 21 tests: admin, parent, student ID box, expiry, errors
 npm run lint && npm run build
 ```
 
@@ -163,7 +186,7 @@ History and commit hashes: [PROGRESS.md](PROGRESS.md).
 - Payment is simulated; confirming always succeeds.
 - Classes cannot be edited or deleted; confirmed admissions cannot be withdrawn through the API.
 - The UI refreshes by polling every 5 seconds rather than push updates.
-- The UI text is English only.
+- The UI text is English, with the brief's Bangla terms on the main buttons and headings.
 
 ## Documentation
 

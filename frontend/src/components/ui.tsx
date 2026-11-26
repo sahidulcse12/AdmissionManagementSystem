@@ -30,12 +30,12 @@ export function StatusBadge({ status }: { status: HoldStatus }) {
 
 /** Stacked bar: confirmed | held | available. */
 export function SeatBar({ cls }: { cls: SchoolClass }) {
-  const pct = (n: number) => `${(n / cls.capacity) * 100}%`
+  const pct = (n: number) => `${(n / cls.totalSeats) * 100}%`
   return (
     <div
       className="seatbar"
       role="img"
-      aria-label={`${cls.confirmedSeats} admitted, ${cls.heldSeats} held, ${cls.availableSeats} available of ${cls.capacity}`}
+      aria-label={`${cls.confirmedSeats} admitted, ${cls.heldSeats} held, ${cls.availableSeats} available of ${cls.totalSeats}`}
     >
       <span className="seatbar-confirmed" style={{ width: pct(cls.confirmedSeats) }} />
       <span className="seatbar-held" style={{ width: pct(cls.heldSeats) }} />

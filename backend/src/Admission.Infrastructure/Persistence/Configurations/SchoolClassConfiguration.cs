@@ -8,15 +8,14 @@ internal sealed class SchoolClassConfiguration : IEntityTypeConfiguration<School
 {
     public void Configure(EntityTypeBuilder<SchoolClass> e)
     {
-        e.ToTable("classes", t => t.HasCheckConstraint("ck_classes_capacity_positive", "capacity > 0"));
+        e.ToTable("classes", t => t.HasCheckConstraint("ck_classes_total_seats_positive", "total_seats > 0"));
         e.HasKey(c => c.Id);
         e.Property(c => c.Id).HasColumnName("id").ValueGeneratedNever();
         e.Property(c => c.Name).HasColumnName("name").HasMaxLength(SchoolClass.NameMaxLength).IsRequired();
         e.Property(c => c.NormalizedName).HasColumnName("normalized_name").HasMaxLength(SchoolClass.NameMaxLength).IsRequired();
-        e.Property(c => c.Shift).HasColumnName("shift").HasConversion<string>().HasMaxLength(16).IsRequired();
-        e.Property(c => c.Capacity).HasColumnName("capacity");
+        e.Property(c => c.TotalSeats).HasColumnName("total_seats");
         e.Property(c => c.CreatedAt).HasColumnName("created_at");
 
-        e.HasIndex(c => new { c.NormalizedName, c.Shift }).IsUnique().HasDatabaseName(ConstraintNames.ClassNameShift);
+        e.HasIndex(c => c.NormalizedName).IsUnique().HasDatabaseName(ConstraintNames.ClassName);
     }
 }

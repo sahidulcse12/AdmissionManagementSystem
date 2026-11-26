@@ -7,10 +7,12 @@ interface Props {
   /** Class ids where the student already holds a seat or is admitted. */
   blockedClassIds: Set<string>
   reservingId: string | undefined
+  /** True when no student ID has been entered yet. */
+  disabled?: boolean
   onReserve: (cls: SchoolClass) => void
 }
 
-export function AvailableClasses({ classes, loading, blockedClassIds, reservingId, onReserve }: Props) {
+export function AvailableClasses({ classes, loading, blockedClassIds, reservingId, disabled = false, onReserve }: Props) {
   if (loading && !classes) return <Loading label="Loading classes…" />
   if (!classes?.length) return <Empty>No classes are open for admission yet.</Empty>
 
@@ -21,20 +23,20 @@ export function AvailableClasses({ classes, loading, blockedClassIds, reservingI
         const full = c.availableSeats === 0
         return (
           <article key={c.id} className="class-card">
-            <header>
-              <h3>{c.name}</h3>
-              <span className="muted small">{c.shift} shift</span>
-            </header>
-            <p className={full ? 'seats full' : 'seats'}>
-              <strong>{c.availableSeats}</strong> of {c.capacity} seats available
-            </p>
+            <h3>{c.name}</h3>
+            <dl className="seat-facts">
+              <div><dt>Total</dt><dd>{c.totalSeats}</dd></div>
+              <div><dt>Held</dt><dd>{c.heldSeats}</dd></div>
+              <div><dt>Admitted</dt><dd>{c.confirmedSeats}</dd></div>
+              <div className={full ? 'full' : 'free'}><dt>Available</dt><dd>{c.availableSeats}</dd></div>
+            </dl>
             <SeatBar cls={c} />
             <button
               onClick={() => onReserve(c)}
-              disabled={full || blocked || reservingId !== undefined}
-              aria-label={`Reserve a seat in ${c.name} ${c.shift}`}
+              disabled={disabled || full || blocked || reservingId !== undefined}
+              aria-label={`Apply for ${c.name}`}
             >
-              {reservingId === c.id ? 'Reserving…' : blocked ? 'Already reserved' : full ? 'Full' : 'Reserve seat'}
+              {reservingId === c.id ? 'Applying…' : blocked ? 'Already applied' : full ? 'Full (seat শেষ)' : 'আবেদন করুন (Apply)'}
             </button>
           </article>
         )

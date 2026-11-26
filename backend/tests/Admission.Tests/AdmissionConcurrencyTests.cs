@@ -11,7 +11,7 @@ public sealed class AdmissionConcurrencyTests(ApiFactory factory)
     [Fact]
     public async Task Parallel_confirmations_of_one_hold_produce_one_admission()
     {
-        var cls = await _client.CreateClassAsync(capacity: 1);
+        var cls = await _client.CreateClassAsync(seats: 1);
         var student = TestData.StudentId();
         var hold = await _client.PlaceHoldOkAsync(cls.Id, student);
 
@@ -27,13 +27,13 @@ public sealed class AdmissionConcurrencyTests(ApiFactory factory)
     [Fact]
     public async Task Parallel_cancellations_are_all_safe()
     {
-        var cls = await _client.CreateClassAsync(capacity: 1);
+        var cls = await _client.CreateClassAsync(seats: 1);
         var student = TestData.StudentId();
         var hold = await _client.PlaceHoldOkAsync(cls.Id, student);
 
         var responses = await ConcurrencyTests.RaceAsync(15, _ => _client.CancelHoldAsync(hold.Id, student));
 
-        Assert.All(responses, r => Assert.Equal(HttpStatusCode.OK, r.StatusCode));
+        Assert.All(responses, r => Assert.Equal(HttpStatusCode.NoContent, r.StatusCode));
         Assert.Equal(1, (await _client.GetClassAsync(cls.Id)).AvailableSeats);
     }
 
@@ -42,7 +42,7 @@ public sealed class AdmissionConcurrencyTests(ApiFactory factory)
     {
         for (var round = 0; round < 10; round++)
         {
-            var cls = await _client.CreateClassAsync(capacity: 1);
+            var cls = await _client.CreateClassAsync(seats: 1);
             var student = TestData.StudentId();
             var hold = await _client.PlaceHoldOkAsync(cls.Id, student);
 
@@ -50,7 +50,8 @@ public sealed class AdmissionConcurrencyTests(ApiFactory factory)
                 ? _client.ConfirmHoldAsync(hold.Id, student)
                 : _client.CancelHoldAsync(hold.Id, student));
 
-            Assert.Single(responses, r => r.StatusCode == HttpStatusCode.OK);
+            // Confirm succeeds with 200, cancel with 204; whichever loses gets 409.
+            Assert.Single(responses, r => r.IsSuccessStatusCode);
             Assert.Single(responses, r => r.StatusCode == HttpStatusCode.Conflict);
 
             var final = await (await _client.GetHoldAsync(hold.Id, student)).ReadAsync<HoldDto>();
@@ -64,7 +65,7 @@ public sealed class AdmissionConcurrencyTests(ApiFactory factory)
     public async Task Released_seats_are_never_handed_out_twice()
     {
         // Capacity 3: three students hold, two cancel, then 20 newcomers race for the two freed seats.
-        var cls = await _client.CreateClassAsync(capacity: 3);
+        var cls = await _client.CreateClassAsync(seats: 3);
         var holders = Enumerable.Range(0, 3).Select(_ => TestData.StudentId()).ToArray();
         var holds = new List<HoldDto>();
         foreach (var s in holders) holds.Add(await _client.PlaceHoldOkAsync(cls.Id, s));

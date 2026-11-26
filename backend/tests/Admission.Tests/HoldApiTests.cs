@@ -12,7 +12,7 @@ public sealed class HoldApiTests(ApiFactory factory)
     [Fact]
     public async Task Placing_a_hold_reserves_a_seat_for_the_configured_duration()
     {
-        var cls = await _client.CreateClassAsync(capacity: 3);
+        var cls = await _client.CreateClassAsync(seats: 3);
         var student = TestData.StudentId();
 
         var response = await _client.PlaceHoldAsync(cls.Id, student);
@@ -38,7 +38,7 @@ public sealed class HoldApiTests(ApiFactory factory)
     [InlineData("123456789012345678", "INVALID_STUDENT_ID")]
     public async Task Student_id_header_is_required_and_validated(string? studentId, string expectedCode)
     {
-        var cls = await _client.CreateClassAsync(capacity: 1);
+        var cls = await _client.CreateClassAsync(seats: 1);
 
         var response = await _client.PlaceHoldAsync(cls.Id, studentId);
 
@@ -58,7 +58,7 @@ public sealed class HoldApiTests(ApiFactory factory)
     [Fact]
     public async Task Full_class_rejects_new_holds()
     {
-        var cls = await _client.CreateClassAsync(capacity: 1);
+        var cls = await _client.CreateClassAsync(seats: 1);
         await _client.PlaceHoldOkAsync(cls.Id, TestData.StudentId());
 
         var response = await _client.PlaceHoldAsync(cls.Id, TestData.StudentId());
@@ -70,7 +70,7 @@ public sealed class HoldApiTests(ApiFactory factory)
     [Fact]
     public async Task Same_student_cannot_hold_twice_in_one_class()
     {
-        var cls = await _client.CreateClassAsync(capacity: 5);
+        var cls = await _client.CreateClassAsync(seats: 5);
         var student = TestData.StudentId();
         await _client.PlaceHoldOkAsync(cls.Id, student);
 
@@ -84,8 +84,8 @@ public sealed class HoldApiTests(ApiFactory factory)
     [Fact]
     public async Task Same_student_may_hold_seats_in_different_classes()
     {
-        var a = await _client.CreateClassAsync(capacity: 1);
-        var b = await _client.CreateClassAsync(capacity: 1);
+        var a = await _client.CreateClassAsync(seats: 1);
+        var b = await _client.CreateClassAsync(seats: 1);
         var student = TestData.StudentId();
 
         await _client.PlaceHoldOkAsync(a.Id, student);
@@ -97,7 +97,7 @@ public sealed class HoldApiTests(ApiFactory factory)
     [Fact]
     public async Task Expired_hold_releases_its_seat_and_lets_the_student_hold_again()
     {
-        var cls = await _client.CreateClassAsync(capacity: 1);
+        var cls = await _client.CreateClassAsync(seats: 1);
         var first = TestData.StudentId();
         var hold = await _client.PlaceHoldOkAsync(cls.Id, first);
 
@@ -120,7 +120,7 @@ public sealed class HoldApiTests(ApiFactory factory)
     [Fact]
     public async Task Hold_is_still_active_one_second_before_expiry()
     {
-        var cls = await _client.CreateClassAsync(capacity: 1);
+        var cls = await _client.CreateClassAsync(seats: 1);
         var student = TestData.StudentId();
         var hold = await _client.PlaceHoldOkAsync(cls.Id, student);
 
@@ -134,9 +134,9 @@ public sealed class HoldApiTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Only_the_owner_can_read_a_hold()
+    public async Task Hold_status_is_readable_without_header_but_a_wrong_header_is_rejected()
     {
-        var cls = await _client.CreateClassAsync(capacity: 1);
+        var cls = await _client.CreateClassAsync(seats: 1);
         var owner = TestData.StudentId();
         var hold = await _client.PlaceHoldOkAsync(cls.Id, owner);
 
@@ -144,8 +144,10 @@ public sealed class HoldApiTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.Forbidden, stranger.StatusCode);
         Assert.Equal("HOLD_NOT_OWNED", await stranger.ErrorCodeAsync());
 
-        var missingHeader = await _client.GetHoldAsync(hold.Id, null);
-        Assert.Equal(HttpStatusCode.BadRequest, missingHeader.StatusCode);
+        // The contract shows GET /holds/{holdId} without X-Student-Id.
+        var noHeader = await _client.GetHoldAsync(hold.Id, null);
+        Assert.Equal(HttpStatusCode.OK, noHeader.StatusCode);
+        Assert.Equal("HELD", (await noHeader.ReadAsync<HoldDto>()).Status);
 
         var unknown = await _client.GetHoldAsync(Guid.NewGuid(), owner);
         Assert.Equal(HttpStatusCode.NotFound, unknown.StatusCode);
@@ -156,8 +158,8 @@ public sealed class HoldApiTests(ApiFactory factory)
     [Fact]
     public async Task My_holds_lists_only_the_callers_holds_newest_first()
     {
-        var a = await _client.CreateClassAsync(capacity: 2);
-        var b = await _client.CreateClassAsync(capacity: 2);
+        var a = await _client.CreateClassAsync(seats: 2);
+        var b = await _client.CreateClassAsync(seats: 2);
         var me = TestData.StudentId();
         var first = await _client.PlaceHoldOkAsync(a.Id, me);
         factory.Clock.Advance(TimeSpan.FromSeconds(1));
@@ -172,7 +174,7 @@ public sealed class HoldApiTests(ApiFactory factory)
     [Fact]
     public async Task Admin_can_list_holds_of_a_class()
     {
-        var cls = await _client.CreateClassAsync(capacity: 3);
+        var cls = await _client.CreateClassAsync(seats: 3);
         await _client.PlaceHoldOkAsync(cls.Id, TestData.StudentId());
         await _client.PlaceHoldOkAsync(cls.Id, TestData.StudentId());
 

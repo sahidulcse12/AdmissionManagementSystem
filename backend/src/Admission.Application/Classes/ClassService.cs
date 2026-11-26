@@ -9,9 +9,9 @@ public sealed class ClassService(IClassRepository classes, IUnitOfWork unitOfWor
 {
     public async Task<ClassResponse> CreateAsync(CreateClassRequest request, CancellationToken ct)
     {
-        var entity = SchoolClass.Create(request.Name, request.Shift, request.Capacity, clock.Now());
+        var entity = SchoolClass.Create(request.Name, request.TotalSeats, clock.Now());
 
-        if (await classes.ExistsAsync(entity.NormalizedName, entity.Shift, ct))
+        if (await classes.ExistsAsync(entity.NormalizedName, ct))
             throw Duplicate(entity);
 
         classes.Add(entity);
@@ -37,5 +37,5 @@ public sealed class ClassService(IClassRepository classes, IUnitOfWork unitOfWor
     internal static NotFoundException NotFound() => new("CLASS_NOT_FOUND", "Class not found.");
 
     private static ConflictException Duplicate(SchoolClass c) =>
-        new("CLASS_ALREADY_EXISTS", $"Class '{c.Name}' already exists in the {c.Shift} shift.");
+        new("CLASS_ALREADY_EXISTS", $"A class named '{c.Name}' already exists.");
 }

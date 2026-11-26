@@ -11,7 +11,7 @@ public sealed class AdmissionApiTests(ApiFactory factory)
     [Fact]
     public async Task Confirming_a_hold_admits_the_student()
     {
-        var cls = await _client.CreateClassAsync(capacity: 2);
+        var cls = await _client.CreateClassAsync(seats: 2);
         var student = TestData.StudentId();
         var hold = await _client.PlaceHoldOkAsync(cls.Id, student);
 
@@ -30,7 +30,7 @@ public sealed class AdmissionApiTests(ApiFactory factory)
     [Fact]
     public async Task Confirmation_is_idempotent()
     {
-        var cls = await _client.CreateClassAsync(capacity: 2);
+        var cls = await _client.CreateClassAsync(seats: 2);
         var student = TestData.StudentId();
         var hold = await _client.PlaceHoldOkAsync(cls.Id, student);
 
@@ -47,7 +47,7 @@ public sealed class AdmissionApiTests(ApiFactory factory)
     [Fact]
     public async Task Confirmed_admission_stays_valid_after_the_hold_window()
     {
-        var cls = await _client.CreateClassAsync(capacity: 1);
+        var cls = await _client.CreateClassAsync(seats: 1);
         var student = TestData.StudentId();
         var hold = await _client.PlaceHoldOkAsync(cls.Id, student);
         await _client.ConfirmHoldAsync(hold.Id, student);
@@ -64,7 +64,7 @@ public sealed class AdmissionApiTests(ApiFactory factory)
     [Fact]
     public async Task Expired_hold_cannot_be_confirmed()
     {
-        var cls = await _client.CreateClassAsync(capacity: 1);
+        var cls = await _client.CreateClassAsync(seats: 1);
         var student = TestData.StudentId();
         var hold = await _client.PlaceHoldOkAsync(cls.Id, student);
 
@@ -79,7 +79,7 @@ public sealed class AdmissionApiTests(ApiFactory factory)
     [Fact]
     public async Task Cancelled_hold_cannot_be_confirmed()
     {
-        var cls = await _client.CreateClassAsync(capacity: 1);
+        var cls = await _client.CreateClassAsync(seats: 1);
         var student = TestData.StudentId();
         var hold = await _client.PlaceHoldOkAsync(cls.Id, student);
         (await _client.CancelHoldAsync(hold.Id, student)).EnsureSuccessStatusCode();
@@ -93,7 +93,7 @@ public sealed class AdmissionApiTests(ApiFactory factory)
     [Fact]
     public async Task Only_the_owner_can_confirm_or_cancel()
     {
-        var cls = await _client.CreateClassAsync(capacity: 1);
+        var cls = await _client.CreateClassAsync(seats: 1);
         var owner = TestData.StudentId();
         var stranger = TestData.StudentId();
         var hold = await _client.PlaceHoldOkAsync(cls.Id, owner);
@@ -130,16 +130,17 @@ public sealed class AdmissionApiTests(ApiFactory factory)
     [Fact]
     public async Task Cancelling_releases_the_seat_and_is_idempotent()
     {
-        var cls = await _client.CreateClassAsync(capacity: 1);
+        var cls = await _client.CreateClassAsync(seats: 1);
         var student = TestData.StudentId();
         var hold = await _client.PlaceHoldOkAsync(cls.Id, student);
 
         var first = await _client.CancelHoldAsync(hold.Id, student);
         var second = await _client.CancelHoldAsync(hold.Id, student);
 
-        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
-        Assert.Equal(HttpStatusCode.OK, second.StatusCode);
-        Assert.Equal("CANCELLED", (await second.ReadAsync<HoldDto>()).Status);
+        Assert.Equal(HttpStatusCode.NoContent, first.StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, second.StatusCode);
+        Assert.Empty(await first.Content.ReadAsByteArrayAsync());
+        Assert.Equal("CANCELLED", (await (await _client.GetHoldAsync(hold.Id, student)).ReadAsync<HoldDto>()).Status);
         Assert.Equal(1, (await _client.GetClassAsync(cls.Id)).AvailableSeats);
 
         // Seat is free for someone else, and the same student may hold again.
@@ -149,7 +150,7 @@ public sealed class AdmissionApiTests(ApiFactory factory)
     [Fact]
     public async Task Confirmed_admission_cannot_be_cancelled()
     {
-        var cls = await _client.CreateClassAsync(capacity: 1);
+        var cls = await _client.CreateClassAsync(seats: 1);
         var student = TestData.StudentId();
         var hold = await _client.PlaceHoldOkAsync(cls.Id, student);
         await _client.ConfirmHoldAsync(hold.Id, student);
@@ -163,7 +164,7 @@ public sealed class AdmissionApiTests(ApiFactory factory)
     [Fact]
     public async Task Expired_hold_cannot_be_cancelled()
     {
-        var cls = await _client.CreateClassAsync(capacity: 1);
+        var cls = await _client.CreateClassAsync(seats: 1);
         var student = TestData.StudentId();
         var hold = await _client.PlaceHoldOkAsync(cls.Id, student);
         factory.Clock.Advance(TimeSpan.FromSeconds(ApiFactory.HoldDurationSeconds + 1));
@@ -179,9 +180,9 @@ public sealed class AdmissionApiTests(ApiFactory factory)
     {
         var classes = new[]
         {
-            await _client.CreateClassAsync(capacity: 1),
-            await _client.CreateClassAsync(capacity: 1),
-            await _client.CreateClassAsync(capacity: 1),
+            await _client.CreateClassAsync(seats: 1),
+            await _client.CreateClassAsync(seats: 1),
+            await _client.CreateClassAsync(seats: 1),
         };
         var student = TestData.StudentId();
 

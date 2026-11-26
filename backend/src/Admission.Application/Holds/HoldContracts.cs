@@ -1,12 +1,16 @@
 using Admission.Application.Abstractions;
+using Admission.Domain.Holds;
 
 namespace Admission.Application.Holds;
 
+/// <summary>
+/// Hold as returned by every hold endpoint. Contains all contract fields
+/// (<c>holdId, classId, className, studentId, status, expiresAt</c>) plus extra detail.
+/// </summary>
 public sealed record HoldResponse(
-    Guid Id,
+    Guid HoldId,
     Guid ClassId,
     string ClassName,
-    string Shift,
     string StudentId,
     string Status,
     DateTimeOffset CreatedAt,
@@ -20,12 +24,12 @@ public sealed record HoldResponse(
     {
         var (hold, cls) = item;
         var status = hold.StatusAt(now);
-        var remaining = status == Domain.Holds.HoldStatus.HELD
+        var remaining = status == HoldStatus.HELD
             ? (int)Math.Ceiling((hold.ExpiresAt - now).TotalSeconds)
             : 0;
 
         return new HoldResponse(
-            hold.Id, cls.Id, cls.Name, cls.Shift.ToString(), hold.StudentId, status.ToString(),
+            hold.Id, cls.Id, cls.Name, hold.StudentId, status.ToString(),
             hold.CreatedAt, hold.ExpiresAt, hold.ConfirmedAt, hold.CancelledAt,
             Math.Max(0, remaining), now);
     }

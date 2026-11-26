@@ -4,44 +4,45 @@
 
 ## Tool and model
 
-- **Tool:** Claude Code (Anthropic's agentic coding assistant), run from the IDE.
+- **Tool:** Claude Code (Anthropic's agentic coding assistant), used from the IDE.
 - **Model:** Claude Opus 5.5.
 
-## What the AI did
+## Where AI was used
 
-The AI agent carried out the work end to end under the developer's direction:
+| Area | What the AI did | What I did |
+|---|---|---|
+| Planning | Proposed the feature-branch plan and priorities | Chose the Git-flow workflow, asked for small commits per task |
+| Backend | Wrote Domain / Application / Infrastructure / Api layers, EF Core config, migrations | Required Clean Architecture; reviewed the locking design |
+| Concurrency | Proposed per-class `SELECT … FOR UPDATE`, hold row locks, partial unique index | Reviewed and verified with race tests and real `curl` races |
+| Frontend | Wrote the React/TypeScript screens, API client, polling and countdown | Checked every screen against the brief |
+| Tests | Wrote 63 backend tests (incl. concurrency and two-instance tests) and 21 frontend tests | Ran them repeatedly, checked failures |
+| Docker / docs | Wrote Dockerfiles, compose file, README and other docs | Verified `docker compose up`, persistence and expiry by hand |
 
-| Area | AI contribution |
-|---|---|
-| Planning | Broke the assignment into seven feature branches and a priority order (P0/P1/P2). |
-| Backend | Wrote the Domain, Application, Infrastructure and Api layers, EF Core configuration and migrations. |
-| Concurrency design | Chose per-class `SELECT … FOR UPDATE`, per-hold row locks, the partial unique index, and the single-row expiry that avoids deadlocks with the sweeper. |
-| Frontend | Wrote the React/TypeScript admin and parent interfaces, API client, polling and countdown hooks. |
-| Tests | Wrote 56 backend tests (domain unit + integration on real PostgreSQL via Testcontainers, including race tests) and 19 frontend tests. |
-| Infrastructure | Wrote Dockerfiles, `docker-compose.yml`, `.env.example`. |
-| Git | Created branches, small task-sized commits and `--no-ff` merges following `main → develop → feature/* → develop → main`. |
-| Documentation | Wrote all English and Bangla documents. |
+## Where the AI was wrong, and how I caught it
 
-## Developer direction during the work
+1. **API contract did not match the brief.** The first version used `capacity` + a separate `shift`
+   field instead of `totalSeats`, returned `id` instead of `holdId`, returned `200` with a body on
+   `DELETE` instead of `204`, and required `X-Student-Id` on `GET /holds/{holdId}`.
+   *How caught:* I compared the implementation line by line with the assignment's API section before
+   submitting. *Fix:* each shift became its own class with `{ name, totalSeats }`, response fields were
+   renamed, `DELETE` returns `204`, and `ContractTests` now assert the exact field names and status codes.
+   A migration folds existing shift values into the class name so no data is lost.
+2. **Timestamp precision bug.** Confirming the same hold twice returned two slightly different
+   `confirmedAt` values (100 ns .NET precision right after the write vs. microsecond precision read back
+   from PostgreSQL), which broke idempotent confirmation.
+   *How caught:* the test suite failed after merging to `develop` even though it had passed on the
+   feature branch — the AI had claimed the feature was done. *Fix:* all times are truncated to
+   microseconds; the suite was re-run several times.
+3. **Possible deadlock.** The first hold-creation code bulk-expired all overdue holds of a class, which
+   could deadlock with the background sweeper doing the same.
+   *How caught:* reviewing the locking order while writing the sweeper. *Fix:* hold creation only
+   touches the requesting student's own overdue hold (at most one row).
+4. **Small slips:** a LINQ ordering EF Core could not translate (500 in tests), guessed commit hashes in
+   `PROGRESS.md`, and a countdown that a stale server response could restart after expiry.
+   All were caught by tests or by re-checking, and fixed.
 
-The developer steered the process with these instructions, which the AI followed:
+## Takeaway
 
-- Restructure the backend into **Clean Architecture** (applied before the hold logic was written).
-- **Commit after every completed task** instead of large commits.
-- **Report each completed feature in Bangla.**
-
-## How AI output was verified
-
-AI-generated code was not accepted on trust:
-
-- Every feature branch was built and its tests run before merging; `develop` was re-tested after each merge.
-- Concurrency tests were run repeatedly to check for flakiness.
-- Re-testing on `develop` exposed a real bug in AI-written code (timestamp precision mismatch that broke
-  idempotent confirm responses). It was diagnosed and fixed (`40591d2`) and the suite re-run three times.
-- The full stack was started with `docker compose up` and exercised through the HTTP API.
-
-## Limitations of AI assistance
-
-- Design choices (e.g. shift names, 17-digit student id, confirmed admissions not cancellable) are
-  documented in [ASSUMPTIONS.md](ASSUMPTIONS.md) and should be reviewed by a human.
-- Manual UI review in a real browser remains the developer's responsibility.
+AI output was never accepted on trust: every feature was built, tested, and checked against the brief,
+and the concurrency guarantees were verified both by automated tests and by firing real parallel
+requests at the running Docker stack.

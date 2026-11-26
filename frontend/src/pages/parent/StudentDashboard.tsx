@@ -7,12 +7,7 @@ import { ActiveHoldCard } from './ActiveHoldCard'
 import { AvailableClasses } from './AvailableClasses'
 import { HistoryTable } from './HistoryTable'
 
-interface Props {
-  studentId: string
-  onChangeStudent: () => void
-}
-
-export function StudentDashboard({ studentId, onChangeStudent }: Props) {
+export function StudentDashboard({ studentId }: { studentId: string }) {
   const [notice, setNotice] = useState<{ kind: 'success' | 'error'; text: string }>()
   const [reservingId, setReservingId] = useState<string>()
 
@@ -45,7 +40,7 @@ export function StudentDashboard({ studentId, onChangeStudent }: Props) {
     setNotice(undefined)
     try {
       await api.placeHold(cls.id, studentId)
-      setNotice({ kind: 'success', text: `Seat reserved in ${cls.name} (${cls.shift}). Confirm before the timer runs out.` })
+      setNotice({ kind: 'success', text: `Seat held in ${cls.name}. Pay the admission fee before the timer runs out.` })
     } catch (e) {
       setNotice({ kind: 'error', text: errorMessage(e) })
     } finally {
@@ -64,22 +59,14 @@ export function StudentDashboard({ studentId, onChangeStudent }: Props) {
 
   return (
     <div className="stack">
-      <section className="card student-bar">
-        <div>
-          <span className="muted small">Student (birth registration no.)</span>
-          <div className="mono student-id">{studentId}</div>
-        </div>
-        <button className="secondary" onClick={onChangeStudent}>Change student</button>
-      </section>
-
       {notice && <Alert kind={notice.kind}>{notice.text}</Alert>}
 
       {active.length > 0 && (
         <section className="card">
-          <h2>Reserved seats awaiting confirmation</h2>
+          <h2>Application (আবেদন)</h2>
           <div className="stack">
             {active.map((h) => (
-              <ActiveHoldCard key={h.id} hold={h} receivedAt={holdsReceivedAt} studentId={studentId} onChanged={onHoldChanged} />
+              <ActiveHoldCard key={h.holdId} hold={h} receivedAt={holdsReceivedAt} studentId={studentId} onChanged={onHoldChanged} />
             ))}
           </div>
         </section>
@@ -87,7 +74,7 @@ export function StudentDashboard({ studentId, onChangeStudent }: Props) {
 
       <section className="card">
         <div className="card-header">
-          <h2>Available classes</h2>
+          <h2>Classes (Class তালিকা)</h2>
           <span className="muted small">Seats update automatically</span>
         </div>
         {classes.error && <Alert kind="error">{classes.error}</Alert>}
@@ -101,7 +88,7 @@ export function StudentDashboard({ studentId, onChangeStudent }: Props) {
       </section>
 
       <section className="card">
-        <h2>Admission history</h2>
+        <h2>My applications (আমার আবেদন)</h2>
         {holds.error && <Alert kind="error">{holds.error}</Alert>}
         {holds.loading && !holds.data ? <Loading /> : <HistoryTable holds={holds.data ?? []} />}
       </section>

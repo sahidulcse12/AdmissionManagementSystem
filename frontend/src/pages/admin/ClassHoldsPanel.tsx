@@ -13,7 +13,7 @@ export function ClassHoldsPanel({ cls, onClose }: { cls: SchoolClass; onClose: (
   return (
     <section className="card">
       <div className="card-header">
-        <h2>{cls.name} · {cls.shift} — admissions</h2>
+        <h2>{cls.name} — admissions</h2>
         <button className="secondary" onClick={onClose}>Close</button>
       </div>
       {error && <Alert kind="error">{error}</Alert>}
@@ -35,7 +35,7 @@ export function ClassHoldsPanel({ cls, onClose }: { cls: SchoolClass; onClose: (
             </thead>
             <tbody>
               {holds.map((h) => (
-                <tr key={h.id}>
+                <tr key={h.holdId}>
                   <td className="mono">{h.studentId}</td>
                   <td><StatusBadge status={h.status} /></td>
                   <td>{formatDateTime(h.createdAt)}</td>
