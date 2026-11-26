@@ -39,7 +39,7 @@ backend/
 
 | স্তর | মূল টাইপ | দায়িত্ব |
 |---|---|---|
-| Domain | `SchoolClass`, `Hold`, `HoldStatus`, `Shift`, `StudentId`, `DomainException` | নিয়ম (সিট ১–১০০০, ১৭ অঙ্কের শিক্ষার্থী আইডি) এবং hold-এর অবস্থা পরিবর্তনের নিয়ম (`Confirm`, `Cancel`, `StatusAt`)। |
+| Domain | `SchoolClass`, `Hold`, `HoldStatus`, `StudentId`, `DomainException` | নিয়ম (সিট ১–১০০০০, ১৭ অঙ্কের শিক্ষার্থী আইডি) এবং hold-এর অবস্থা পরিবর্তনের নিয়ম (`Confirm`, `Cancel`, `StatusAt`)। |
 | Application | `ClassService`, `HoldService`, `IClassRepository`, `IHoldRepository`, `IUnitOfWork` | Transaction-এর ভেতরে use case পরিচালনা করে; কখনো SQL স্পর্শ করে না। |
 | Infrastructure | `AdmissionDbContext`, `ClassRepository`, `HoldRepository`, `UnitOfWork`, `HoldExpirySweeper` | Row lock, সিট গণনার query, constraint ম্যাপিং, স্টার্টআপে migration। |
 | Api | `ClassEndpoints`, `HoldEndpoints`, `ErrorHandlingMiddleware` | HTTP ↔ use case এবং exception ↔ status code রূপান্তর। |
@@ -53,8 +53,7 @@ erDiagram
     uuid id PK
     varchar name
     varchar normalized_name "বড় হাতের অক্ষরে, unique যাচাইয়ের জন্য"
-    varchar shift "MORNING | DAY | EVENING"
-    int capacity "CHECK > 0"
+    int total_seats "CHECK > 0"
     timestamptz created_at
   }
   holds {
@@ -71,8 +70,8 @@ erDiagram
 
 | Constraint / index | উদ্দেশ্য |
 |---|---|
-| `ux_classes_normalized_name_shift` (unique) | একই শিফটে একই নামের দুটি ক্লাস হবে না (বড়/ছোট হাতের অক্ষর নির্বিশেষে)। |
-| `ck_classes_capacity_positive` | সিট সংখ্যা অবশ্যই ধনাত্মক। |
+| `ux_classes_normalized_name` (unique) | একই নামের দুটি class হবে না (বড়/ছোট হাতের অক্ষর নির্বিশেষে)। প্রতিটি shift আলাদা class। |
+| `ck_classes_total_seats_positive` | `total_seats` অবশ্যই ধনাত্মক। |
 | `ux_holds_one_active_per_student_class` — unique `(class_id, student_id)` **WHERE status IN ('HELD','CONFIRMED')** | ডাটাবেসের নিশ্চয়তা: প্রতি ক্লাসে একজন শিক্ষার্থীর একটিই সক্রিয় hold বা ভর্তি। |
 | `ck_holds_status` | শুধু চারটি বৈধ অবস্থা সংরক্ষণ করা যায়। |
 | `ix_holds_class_status_expires` | ক্লাসভিত্তিক দ্রুত সিট গণনা। |
@@ -83,7 +82,7 @@ erDiagram
 
 ```
 occupied  = CONFIRMED + (HELD যার expires_at > now)
-available = capacity − occupied
+available = total_seats − occupied
 ```
 
 ## Hold-এর জীবনচক্র
@@ -110,9 +109,10 @@ sweeper (প্রতি `EXPIRY_SWEEP_SECONDS` সেকেন্ডে) সা
 | একই hold একসাথে কয়েকবার confirm | Transaction + `SELECT … FROM holds WHERE id = $1 FOR UPDATE`। প্রথম অনুরোধ confirm করে; বাকিরা `CONFIRMED` দেখে একই ফলাফল ফেরত দেয়। | একটিই ভর্তি, একই রকম response (পরীক্ষিত: ১৫টি সমান্তরাল)। |
 | Confirm চলাকালীন hold-এর মেয়াদ শেষ | Hold সারির lock পাওয়ার *পরে* সেই মুহূর্তের সময় দিয়ে মেয়াদ যাচাই হয়। Sweeper-এর `UPDATE … WHERE status = 'HELD'` lock-এর জন্য অপেক্ষা করে, তারপর confirm হওয়া সারি বাদ দেয়। | হয় সময়মতো confirm, নয়তো `410 Gone` — কখনো দুটোই নয়। |
 | Confirm ও cancel একসাথে | একই hold সারির lock। | ঠিক একটি সফল হয়; অন্যটি `409` পায়। |
-| বারবার বাতিল | Hold সারির lock; বাতিল hold আবার বাতিল করলে কিছুই হয় না। | সব `200`, সিট একবারই খালি হয়। |
+| বারবার বাতিল | Hold সারির lock; বাতিল hold আবার বাতিল করলে কিছুই হয় না। | সব `204`, সিট একবারই খালি হয়। |
 | অন্য শিক্ষার্থীর hold confirm | Hold লোড করার পরে backend-এ মালিকানা যাচাই। | `403 HOLD_NOT_OWNED`। |
 | ব্যবহারকারীকে দেখানো সিট সংখ্যা | প্রতিটি অনুরোধে ডাটাবেস থেকে গণনা; UI প্রতি ৫ সেকেন্ডে আপডেট হয়। | সবসময় commit হওয়া অবস্থা দেখায়। |
+| একই ডাটাবেসে দুটি backend process | উপরের প্রতিটি নিয়ম PostgreSQL-এ থাকে (row lock, unique index, গণনা করা সংখ্যা); process-এর memory-তে কিছু রাখা হয় না। | অতিরিক্ত বুকিং হয় না (পরীক্ষিত: দুটি host, ৭টি সিটের জন্য ৬০টি অনুরোধ; হাতে-কলমে `--profile multi` দিয়ে 8080 ও 8081 পোর্টে ৫টি সিটের জন্য ৬০টি অনুরোধ)। |
 
 **Deadlock এড়ানো:** sweeper একটি statement-এ অনেক সারি update করে। তাই hold তৈরির সময় কখনো অন্য শিক্ষার্থীদের
 hold একসাথে update করা হয় না; শুধু অনুরোধকারী শিক্ষার্থীর নিজের মেয়াদোত্তীর্ণ hold (সর্বোচ্চ একটি সারি) expire করা
@@ -128,9 +128,9 @@ hold একসাথে update করা হয় না; শুধু অন�
 frontend/src/
 ├── api/            # Typed fetch ক্লায়েন্ট (X-Student-Id যোগ করে), response টাইপ, ApiError
 ├── hooks/          # usePolling (দৃশ্যমান থাকলে প্রতি ৫ সেকেন্ডে), useCountdown
-├── components/     # Alert, Loading, Empty, StatusBadge, SeatBar
+├── components/     # StudentIdBar (top of every page), Alert, Loading, Empty, StatusBadge, SeatBar
 ├── pages/admin/    # AdminPage, CreateClassForm, ClassHoldsPanel
-├── pages/parent/   # ParentPage, StudentIdForm, StudentDashboard, ActiveHoldCard, AvailableClasses, HistoryTable
+├── pages/parent/   # ParentPage, StudentDashboard, ActiveHoldCard, AvailableClasses, HistoryTable
 └── utils/          # ফরম্যাট সহায়ক, নিরাপদ localStorage
 ```
 

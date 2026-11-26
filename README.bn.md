@@ -2,16 +2,20 @@
 
 > English: [README.md](README.md)
 
-"আগে এলে আগে পাবেন" (first-come-first-served) নিয়মে চলা একটি স্কুল ভর্তি সিস্টেম। অভিভাবকরা একটি ক্লাস ও
-শিফটে সিট রিজার্ভ করেন, নির্দিষ্ট সময় (ডিফল্ট ১০ মিনিট) সিটটি ধরে রাখেন (hold), এবং ভর্তি নিশ্চিত করেন।
-অ্যাডমিন ক্লাস তৈরি করেন, সিট সংখ্যা ঠিক করেন এবং সিট পূরণ হওয়া দেখেন। একসাথে অনেক অভিভাবক ক্লিক করলেও
-সিস্টেম কখনো ক্লাসের ধারণক্ষমতার বেশি শিক্ষার্থী ভর্তি করে না।
+"আগে আবেদন করলে আগে পাবে" (first-come-first-served) নিয়মে চলা একটি স্কুল ভর্তি সিস্টেম। অভিভাবক কোনো class-এ
+আবেদন করলে সিটটি নির্দিষ্ট সময় (ডিফল্ট ১০ মিনিট) শিক্ষার্থীর নামে hold থাকে, এবং ভর্তি ফি দিলে ভর্তি নিশ্চিত হয়।
+অ্যাডমিন class তৈরি করেন ও সিট পূরণ হওয়া দেখেন। একসাথে অনেক অভিভাবক আবেদন করলেও — এমনকি একই ডাটাবেসে দুটি
+backend process চললেও — সিস্টেম কখনো `totalSeats`-এর বেশি শিক্ষার্থী ভর্তি করে না।
+
+প্রতিটি shift একটি আলাদা class, যেমন "Class 6 - Morning Shift" ও "Class 6 - Day Shift"।
 
 ## বৈশিষ্ট্য
 
-- **অ্যাডমিন:** শিফটভিত্তিক ক্লাস ও সিট সংখ্যা তৈরি; ভর্তি / held / খালি সিটের লাইভ টেবিল; প্রতি ক্লাসের hold ও ভর্তির তালিকা।
-- **অভিভাবক:** জন্ম নিবন্ধন নম্বর দিয়ে শিক্ষার্থী শনাক্তকরণ; খালি সিট দেখা; সিট রিজার্ভ; লাইভ countdown;
-  পেমেন্ট ও নিশ্চিতকরণ (পেমেন্ট সিমুলেটেড) বা বাতিল; ভর্তির ইতিহাস।
+- **Page-এর উপরে শিক্ষার্থীর জন্ম নিবন্ধন নম্বরের ঘর** (১৭ অঙ্ক); কোনো login নেই।
+- **অ্যাডমিন:** নাম ও মোট সিট দিয়ে class তৈরি; মোট / hold / নিশ্চিত / খালি সিটের লাইভ টেবিল; প্রতি class-এর
+  আবেদন ও ভর্তির তালিকা।
+- **অভিভাবক:** সিটের হিসাবসহ class তালিকা ও **"আবেদন করুন"** বোতাম; আবেদনে অবস্থা, বাকি সময়, **"ভর্তি ফি দিন"**
+  ও **"বাতিল"** বোতাম; **"আমার আবেদন"**-এ সব আবেদন ও প্রতিটির অবস্থা।
 - **কঠোর first-come-first-served**: কোনো লটারি নেই; অনুরোধ ডাটাবেসে যে ক্রমে পৌঁছায় সেটাই নির্ধারক।
 - **সিট hold**, সময়সীমা কনফিগারযোগ্য; মেয়াদ শেষ হলে সিট নিজে থেকেই খালি হয়।
 - **Concurrency-নিরাপদ**: row-level lock, transaction ও আংশিক unique index — আসল PostgreSQL-এ race টেস্ট দিয়ে যাচাই করা।
@@ -49,11 +53,24 @@ docker compose up --build
 
 ### ব্যবহার করে দেখুন
 
-১. **Admin** ট্যাবে একটি ক্লাস তৈরি করুন, যেমন `Class 1`, `MORNING`, সিট `2`।
-২. **Parent / Guardian** ট্যাবে ১৭ অঙ্কের একটি নম্বর দিন, যেমন `20150123456789012`।
-৩. **Reserve seat** চাপুন — ১০ মিনিটের countdown দেখা যাবে।
-৪. **Pay & confirm admission** চাপুন — ইতিহাসে ও অ্যাডমিন টেবিলে সিটটি *Admitted* হবে।
-৫. **Change student** দিয়ে অন্য নম্বর ব্যবহার করে দেখুন সিট শেষ হলে ক্লাসটি **Full** দেখায়।
+১. **Admin** ট্যাবে একটি class তৈরি করুন, যেমন নাম `Class 6 - Morning Shift`, মোট সিট `2`।
+২. Page-এর উপরের ঘরে ১৭ অঙ্কের একটি নম্বর দিন, যেমন `20150123456789012`।
+৩. **Parent / Guardian** ট্যাবে **আবেদন করুন (Apply)** চাপুন — আবেদনে ১০ মিনিটের countdown দেখা যাবে।
+৪. **ভর্তি ফি দিন (Pay admission fee)** চাপুন — "আমার আবেদন"-এ ও অ্যাডমিন টেবিলে অবস্থা *Admitted* হবে।
+৫. উপরে **Change** চেপে অন্য নম্বর দিন, দেখুন সিট শেষ হলে class-টি **Full** দেখায়।
+
+দ্রুত মেয়াদ শেষ হওয়া দেখতে: `HOLD_DURATION_SECONDS=30 docker compose up` — ৩০ সেকেন্ড পর page reload ছাড়াই
+আবেদন **EXPIRED** দেখাবে এবং ফি দেওয়ার বোতাম বন্ধ হবে।
+
+### Bonus: একই ডাটাবেসে দুটি backend process
+
+```bash
+docker compose --profile multi up --build
+```
+
+এতে একই PostgreSQL ব্যবহার করে http://localhost:8081-এ `api2`-ও চালু হয়। দুটি API একসাথে ব্যবহার করলেও
+`held + confirmed` কখনো `totalSeats`-এর বেশি হয় না। কীভাবে নিশ্চিত করা হয়েছে তা
+[ASSUMPTIONS.bn.md](ASSUMPTIONS.bn.md)-এ লেখা আছে।
 
 ## কনফিগারেশন
 
@@ -65,6 +82,7 @@ docker compose up --build
 | `EXPIRY_SWEEP_SECONDS` | `15` | api | কত সেকেন্ড পরপর মেয়াদোত্তীর্ণ hold ডাটাবেসে `EXPIRED` করা হয়। |
 | `CORS_ORIGINS` | `*` | api | অনুমোদিত ব্রাউজার origin (কমা দিয়ে আলাদা)। |
 | `API_PORT` | `8080` | api | API-এর host পোর্ট। |
+| `API2_PORT` | `8081` | api2 | ঐচ্ছিক দ্বিতীয় API-এর host পোর্ট (`--profile multi`)। |
 | `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | `admission` | db, api | ডাটাবেসের তথ্য; API-এর connection string এগুলো থেকে তৈরি হয়। |
 | `POSTGRES_PORT` | `5432` | db | PostgreSQL-এর host পোর্ট। |
 | `API_URL` | `http://localhost:8080` | web | ব্রাউজার যে API ঠিকানা ব্যবহার করে; কন্টেইনার চালুর সময় `config.js`-এ লেখা হয়। |
@@ -89,15 +107,15 @@ API তার connection string `DATABASE_URL` (Npgsql ফরম্যাট) �
 
 | Method | Path | উদ্দেশ্য |
 |---|---|---|
-| `POST` | `/classes` | ক্লাস তৈরি |
-| `GET` | `/classes` | বর্তমান সিট সংখ্যাসহ ক্লাসের তালিকা |
-| `GET` | `/classes/{classId}` | একটি ক্লাস |
-| `POST` | `/classes/{classId}/holds` | সিট রিজার্ভ (`X-Student-Id` প্রয়োজন) |
-| `GET` | `/holds/{holdId}` | hold দেখা (শুধু মালিক) |
-| `POST` | `/holds/{holdId}/confirm` | ভর্তি নিশ্চিত (শুধু মালিক, idempotent) |
-| `DELETE` | `/holds/{holdId}` | hold বাতিল (শুধু মালিক) |
-| `GET` | `/me/holds` | শিক্ষার্থীর hold ও ভর্তির ইতিহাস |
-| `GET` | `/classes/{classId}/holds` | অ্যাডমিন: একটি ক্লাসের hold ও ভর্তি |
+| `POST` | `/classes` | নতুন class তৈরি — body `{ "name", "totalSeats" }` → `201` |
+| `GET` | `/classes` | `totalSeats`, `heldSeats`, `confirmedSeats`, `availableSeats` সহ সব class |
+| `GET` | `/classes/{classId}` | একটি class-এর seat-এর অবস্থা |
+| `POST` | `/classes/{classId}/holds` | আবেদন / seat hold (`X-Student-Id`) → `201`, seat না থাকলে `409` |
+| `GET` | `/holds/{holdId}` | আবেদনের বর্তমান অবস্থা (`holdId`, `status`, `expiresAt`, …) |
+| `POST` | `/holds/{holdId}/confirm` | ভর্তি ফি জমা, ভর্তি নিশ্চিত (শুধু মালিক, idempotent) → `200` |
+| `DELETE` | `/holds/{holdId}` | আবেদন বাতিল (শুধু মালিক) → `204` |
+| `GET` | `/me/holds` | এই শিক্ষার্থীর সব আবেদন |
+| `GET` | `/classes/{classId}/holds` | বাড়তি: অ্যাডমিনের জন্য একটি class-এর আবেদনের তালিকা |
 
 Request/response ফরম্যাট ও সব error code: [API.bn.md](API.bn.md)।
 
@@ -107,13 +125,17 @@ Request/response ফরম্যাট ও সব error code: [API.bn.md](API.bn
 
 ```bash
 cd backend
-dotnet test                       # ৫৬টি টেস্ট: domain নিয়ম, API, মেয়াদোত্তীর্ণ, race
+dotnet test                       # ৬৩টি টেস্ট: contract, domain নিয়ম, মেয়াদ, race, দুই instance
 ```
+
+Concurrency টেস্টগুলো হলো `ConcurrencyTests` (যেমন ৫টি সিটের জন্য ৫০ জন একসাথে → ঠিক ৫টি hold),
+`AdmissionConcurrencyTests` এবং `MultiInstanceTests` (একই ডাটাবেসে দুটি backend host)।
+ব্যাকএন্ড টেস্টের জন্য .NET 9 SDK এবং চালু Docker লাগবে।
 
 ```bash
 cd frontend
 npm ci
-npm test                          # ১৯টি টেস্ট: অ্যাডমিন ও অভিভাবকের কাজের ধারা
+npm test                          # ২১টি টেস্ট: অ্যাডমিন, অভিভাবক, শিক্ষার্থী আইডির ঘর, মেয়াদ, error
 npm run lint && npm run build
 ```
 
@@ -160,7 +182,7 @@ main ── develop ──┬── feature/project-setup
 - পেমেন্ট সিমুলেটেড; নিশ্চিতকরণ সবসময় সফল।
 - ক্লাস সম্পাদনা বা মুছে ফেলা যায় না; নিশ্চিত ভর্তি API দিয়ে প্রত্যাহার করা যায় না।
 - UI push update-এর বদলে প্রতি ৫ সেকেন্ডে polling করে রিফ্রেশ হয়।
-- UI-এর লেখা শুধু ইংরেজিতে।
+- UI-এর লেখা ইংরেজিতে, মূল বোতাম ও শিরোনামে brief-এর বাংলা শব্দসহ।
 
 ## ডকুমেন্টেশন
 

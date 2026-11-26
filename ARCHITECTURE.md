@@ -39,7 +39,7 @@ Dependencies point inward only: `Api → Infrastructure → Application → Doma
 
 | Layer | Key types | Responsibility |
 |---|---|---|
-| Domain | `SchoolClass`, `Hold`, `HoldStatus`, `Shift`, `StudentId`, `DomainException` | Invariants (capacity 1–1000, 17-digit student id) and the hold state machine (`Confirm`, `Cancel`, `StatusAt`). |
+| Domain | `SchoolClass`, `Hold`, `HoldStatus`, `StudentId`, `DomainException` | Invariants (totalSeats 1–10000, 17-digit student id) and the hold state machine (`Confirm`, `Cancel`, `StatusAt`). |
 | Application | `ClassService`, `HoldService`, `IClassRepository`, `IHoldRepository`, `IUnitOfWork` | Orchestrates a use case inside a transaction; never touches SQL. |
 | Infrastructure | `AdmissionDbContext`, `ClassRepository`, `HoldRepository`, `UnitOfWork`, `HoldExpirySweeper` | Row locks, seat counting queries, constraint mapping, migrations at startup. |
 | Api | `ClassEndpoints`, `HoldEndpoints`, `ErrorHandlingMiddleware` | Maps HTTP ↔ use cases and exceptions ↔ status codes. |
@@ -53,8 +53,7 @@ erDiagram
     uuid id PK
     varchar name
     varchar normalized_name "upper-case, for uniqueness"
-    varchar shift "MORNING | DAY | EVENING"
-    int capacity "CHECK > 0"
+    int total_seats "CHECK > 0"
     timestamptz created_at
   }
   holds {
@@ -71,8 +70,8 @@ erDiagram
 
 | Constraint / index | Purpose |
 |---|---|
-| `ux_classes_normalized_name_shift` (unique) | No duplicate class name in a shift (case-insensitive). |
-| `ck_classes_capacity_positive` | Capacity must be positive. |
+| `ux_classes_normalized_name` (unique) | No duplicate class name (case-insensitive). Each shift is its own class. |
+| `ck_classes_total_seats_positive` | `total_seats` must be positive. |
 | `ux_holds_one_active_per_student_class` — unique `(class_id, student_id)` **WHERE status IN ('HELD','CONFIRMED')** | Database guarantee: one active hold or admission per student per class. |
 | `ck_holds_status` | Only the four valid statuses can be stored. |
 | `ix_holds_class_status_expires` | Fast seat counting per class. |
@@ -83,7 +82,7 @@ Seat counts are **never stored**; they are always computed from `holds`:
 
 ```
 occupied  = CONFIRMED + (HELD with expires_at > now)
-available = capacity − occupied
+available = total_seats − occupied
 ```
 
 ## Hold lifecycle
@@ -105,14 +104,15 @@ before the background sweeper (every `EXPIRY_SWEEP_SECONDS`) writes `EXPIRED` to
 
 | Scenario | Protection | Result |
 |---|---|---|
-| Many students race for the last seat(s) | Transaction + `SELECT … FROM classes WHERE id = $1 FOR UPDATE`. All hold creation for a class is serialised in arrival order; the seat count and the insert happen under the lock. | Never more holds than capacity (tested: 50 students / 5 seats). |
+| Many students race for the last seat(s) | Transaction + `SELECT … FROM classes WHERE id = $1 FOR UPDATE`. All hold creation for a class is serialised in arrival order; the seat count and the insert happen under the lock. | Never more holds than totalSeats (tested: 50 students / 5 seats). |
 | Same student sends parallel holds | Same class lock, plus the partial unique index as a last line of defence (unique violation → `409`). | Exactly one hold (tested: 20 parallel requests). |
 | Same hold confirmed in parallel | Transaction + `SELECT … FROM holds WHERE id = $1 FOR UPDATE`. The first request confirms; the rest see `CONFIRMED` and return the same body. | One admission, identical responses (tested: 15 parallel). |
 | Hold expires while being confirmed | Expiry is evaluated *after* the hold row lock is acquired, using the time at that moment. The sweeper's `UPDATE … WHERE status = 'HELD'` waits for the lock and then skips the confirmed row. | Either confirmed in time or `410 Gone` — never both. |
 | Confirm races with cancel | Same hold row lock. | Exactly one wins; the other gets `409`. |
-| Repeated cancellation | Hold row lock; cancelling a cancelled hold is a no-op. | All `200`, seat released once. |
+| Repeated cancellation | Hold row lock; cancelling a cancelled hold is a no-op. | All `204`, seat released once. |
 | Confirming another student's hold | Ownership check on the backend after loading the hold. | `403 HOLD_NOT_OWNED`. |
 | Seat availability shown to users | Computed from the database on every request; UI polls every 5 s. | Always reflects committed state. |
+| Two backend processes on one database | Every rule above lives in PostgreSQL (row locks, unique index, computed counts); nothing is held in process memory. | No overbooking (tested: two hosts, 60 requests / 7 seats; manually with `--profile multi`: 60 requests / 5 seats across ports 8080 and 8081). |
 
 **Deadlock avoidance:** the sweeper updates many rows in one statement. Hold creation therefore never
 bulk-updates other students' holds; it only expires the requesting student's own overdue hold (at most
@@ -128,9 +128,9 @@ so a response returned right after a write is identical to the same record read 
 frontend/src/
 ├── api/            # Typed fetch client (adds X-Student-Id), response types, ApiError
 ├── hooks/          # usePolling (5 s refresh while visible), useCountdown
-├── components/     # Alert, Loading, Empty, StatusBadge, SeatBar
+├── components/     # StudentIdBar (top of every page), Alert, Loading, Empty, StatusBadge, SeatBar
 ├── pages/admin/    # AdminPage, CreateClassForm, ClassHoldsPanel
-├── pages/parent/   # ParentPage, StudentIdForm, StudentDashboard, ActiveHoldCard, AvailableClasses, HistoryTable
+├── pages/parent/   # ParentPage, StudentDashboard, ActiveHoldCard, AvailableClasses, HistoryTable
 └── utils/          # format helpers, safe localStorage
 ```
 

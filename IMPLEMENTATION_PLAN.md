@@ -5,8 +5,8 @@
 ## Goal
 
 A School Admission Management System where parents reserve seats first-come-first-served,
-hold them for a limited time, and confirm admission. Admins manage classes, shifts and capacity.
-The system must never allocate more seats than a class's capacity, even under concurrent load.
+hold them for a limited time, and confirm admission. Admins manage classes (each shift is its own class) and their total seats.
+The system must never allocate more seats than a class's totalSeats, even under concurrent load.
 
 ## Stack
 
