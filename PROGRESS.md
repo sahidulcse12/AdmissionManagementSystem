@@ -80,3 +80,13 @@ Recorded after the last feature merge — see [Final integration on `develop`](#
 - None open. Resolved: responses returned right after a write had 100 ns precision while
   later reads had PostgreSQL's microsecond precision, breaking idempotent confirm responses (`40591d2`).
 - Limitations by design are listed in [README.md](README.md#known-limitations) and [ASSUMPTIONS.md](ASSUMPTIONS.md).
+
+## Final integration on `develop`
+
+| Step | Result |
+|---|---|
+| `feature/testing-and-documentation` → `develop` | merge `ba959eb` |
+| Backend `dotnet build` / `dotnet test` on `develop` | 0 warnings, 0 errors / 56 passed, 0 failed |
+| Frontend `npm test` / `npm run lint` / `npm run build` on `develop` | 19 passed / clean / OK |
+| `docker compose up -d --build` from `develop` + smoke test | all services up, hold → confirm → `CONFIRMED`, full class → `409`, UI `200` |
+| `develop` → `main` | merged with `--no-ff` after this commit; hash: `git log main -1` |
