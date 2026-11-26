@@ -4,9 +4,9 @@
 
 ## বর্তমান অবস্থা
 
-- **বর্তমান ধাপ:** অ্যাডমিন ইন্টারফেস সম্পন্ন
-- **বর্তমান ব্রাঞ্চ:** `feature/frontend-admin` → `develop`-এ মার্জ হচ্ছে
-- **পরবর্তী কাজ:** `develop` থেকে `feature/frontend-parent` তৈরি করা
+- **বর্তমান ধাপ:** ফ্রন্টএন্ডের মূল কাজ সম্পন্ন (অভিভাবক ইন্টারফেস শেষ)
+- **বর্তমান ব্রাঞ্চ:** `feature/frontend-parent` → `develop`-এ মার্জ হচ্ছে
+- **পরবর্তী কাজ:** `develop` থেকে `feature/testing-and-documentation` তৈরি করা; Docker দিয়ে end-to-end যাচাই
 - **ব্যাকএন্ড আর্কিটেকচার:** Clean Architecture (`Domain` → `Application` → `Infrastructure` → `Api`)
 
 ## Feature ব্রাঞ্চসমূহ
@@ -18,8 +18,8 @@
 | ৩ | `feature/seat-availability-and-hold` | সম্পন্ন | `a748e5c`, `3937cbd`, `cac6b08`, `050f21e`, `cf7ba54`, `7ccc2ac` | `51af863` |
 | ৪ | `feature/admission-confirmation-and-cancellation` | সম্পন্ন | `6878a9a`, `0e2240d`, `c454a1d`, `0502091` | `5251875` |
 | — | `develop` (ইন্টিগ্রেশন সংশোধন) | সম্পন্ন | `40591d2` সময়ের নির্ভুলতা PostgreSQL অনুযায়ী করা | সরাসরি `develop`-এ |
-| ৫ | `feature/frontend-admin` | সম্পন্ন | `258daee`, `ff3a7e5`, `56b3e9a` | পরবর্তী আপডেটে লেখা হবে |
-| ৬ | `feature/frontend-parent` | বাকি | | |
+| ৫ | `feature/frontend-admin` | সম্পন্ন | `258daee`, `ff3a7e5`, `56b3e9a`, অগ্রগতি কমিট | `804d9f5` |
+| ৬ | `feature/frontend-parent` | সম্পন্ন | `3bbb3b4`, `39ba60e` | পরবর্তী আপডেটে লেখা হবে |
 | ৭ | `feature/testing-and-documentation` | বাকি | | |
 
 `main`-এর ভিত্তি কমিট: `41838aa` (প্রাথমিক রিপোজিটরি সেটআপ)।
@@ -38,6 +38,7 @@
 | নিশ্চিতকরণ ও বাতিল | `dotnet test` | ৫৬টি সফল, ০টি ব্যর্থ |
 | মার্জের পর `develop`-এ | `dotnet test` | ২টি ব্যর্থ (সময়ের নির্ভুলতার বাগ) → `40591d2`-এ সংশোধন, এরপর ৩ বার ৫৬টি সফল |
 | অ্যাডমিন ইন্টারফেস | `npm test`, `npm run lint`, `npm run build` | ৬টি সফল, lint পরিষ্কার, build সফল |
+| অভিভাবক ইন্টারফেস | `npm test`, `npm run lint`, `npm run build` | ১৯টি সফল, lint পরিষ্কার, build সফল |
 
 ## জানা সমস্যা
 

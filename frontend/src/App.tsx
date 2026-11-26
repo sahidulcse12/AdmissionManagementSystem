@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AdminPage } from './pages/admin/AdminPage'
+import { ParentPage } from './pages/parent/ParentPage'
 
 type Route = 'parent' | 'admin'
 
@@ -28,7 +29,7 @@ export default function App() {
         </div>
       </header>
       <main className="container">
-        {route === 'admin' ? <AdminPage /> : <p className="muted">Parent portal coming soon.</p>}
+        {route === 'admin' ? <AdminPage /> : <ParentPage />}
       </main>
     </>
   )

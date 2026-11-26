@@ -4,9 +4,9 @@
 
 ## Current status
 
-- **Current phase:** Admin interface complete
-- **Current branch:** `feature/frontend-admin` → merging into `develop`
-- **Next action:** Create `feature/frontend-parent` from `develop`
+- **Current phase:** Frontend core complete (parent interface done)
+- **Current branch:** `feature/frontend-parent` → merging into `develop`
+- **Next action:** Create `feature/testing-and-documentation` from `develop`; verify Docker end-to-end
 - **Backend architecture:** Clean Architecture (`Domain` → `Application` → `Infrastructure` → `Api`)
 
 ## Feature branches
@@ -18,8 +18,8 @@
 | 3 | `feature/seat-availability-and-hold` | Done | `a748e5c`, `3937cbd`, `cac6b08`, `050f21e`, `cf7ba54`, `7ccc2ac` | `51af863` |
 | 4 | `feature/admission-confirmation-and-cancellation` | Done | `6878a9a`, `0e2240d`, `c454a1d`, `0502091` | `5251875` |
 | — | `develop` (integration fix) | Done | `40591d2` fix: truncate timestamps to PostgreSQL precision | direct on `develop` |
-| 5 | `feature/frontend-admin` | Done | `258daee`, `ff3a7e5`, `56b3e9a` | recorded in next update |
-| 6 | `feature/frontend-parent` | Pending | | |
+| 5 | `feature/frontend-admin` | Done | `258daee`, `ff3a7e5`, `56b3e9a`, progress commit | `804d9f5` |
+| 6 | `feature/frontend-parent` | Done | `3bbb3b4`, `39ba60e` | recorded in next update |
 | 7 | `feature/testing-and-documentation` | Pending | | |
 
 Base commit on `main`: `41838aa` (initial repository setup).
@@ -38,6 +38,7 @@ Base commit on `main`: `41838aa` (initial repository setup).
 | Confirmation & cancellation | `dotnet test` | 56 passed, 0 failed |
 | After merge on `develop` | `dotnet test` | 2 failed (timestamp precision bug) → fixed in `40591d2`, then 56 passed ×3 |
 | Admin interface | `npm test`, `npm run lint`, `npm run build` | 6 passed, lint clean, build OK |
+| Parent interface | `npm test`, `npm run lint`, `npm run build` | 19 passed, lint clean, build OK |
 
 ## Known issues
 
