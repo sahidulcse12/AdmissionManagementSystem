@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Admission.Api.Data.Migrations
+namespace Admission.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     public partial class InitialClasses : Migration
@@ -17,6 +17,7 @@ namespace Admission.Api.Data.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    normalized_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     shift = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: false),
                     capacity = table.Column<int>(type: "integer", nullable: false),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
@@ -28,9 +29,9 @@ namespace Admission.Api.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "ux_classes_name_shift",
+                name: "ux_classes_normalized_name_shift",
                 table: "classes",
-                columns: new[] { "name", "shift" },
+                columns: new[] { "normalized_name", "shift" },
                 unique: true);
         }
 

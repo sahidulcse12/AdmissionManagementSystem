@@ -1,6 +1,6 @@
-using Admission.Api.Domain;
+using Admission.Domain.Classes;
 
-namespace Admission.Api.Features.Classes;
+namespace Admission.Application.Classes;
 
 public sealed record CreateClassRequest(string? Name, string? Shift, int? Capacity);
 

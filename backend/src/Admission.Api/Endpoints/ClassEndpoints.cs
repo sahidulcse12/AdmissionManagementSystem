@@ -1,6 +1,7 @@
-using Admission.Api.Http;
+using Admission.Application.Classes;
+using Admission.Application.Common;
 
-namespace Admission.Api.Features.Classes;
+namespace Admission.Api.Endpoints;
 
 public static class ClassEndpoints
 {
@@ -8,7 +9,7 @@ public static class ClassEndpoints
     {
         app.MapPost("/classes", async (CreateClassRequest? request, ClassService service, CancellationToken ct) =>
         {
-            if (request is null) throw ApiException.BadRequest("INVALID_REQUEST", "Request body is required.");
+            if (request is null) throw new ValidationException("INVALID_REQUEST", "Request body is required.");
             var created = await service.CreateAsync(request, ct);
             return Results.Created($"/classes/{created.Id}", created);
         });

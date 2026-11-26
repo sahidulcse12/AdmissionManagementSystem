@@ -1,18 +1,22 @@
 using System.Text.Json.Serialization;
 using Admission.Api.Configuration;
-using Admission.Api.Data;
-using Admission.Api.Features.Classes;
-using Admission.Api.Http;
-using Microsoft.EntityFrameworkCore;
+using Admission.Api.Endpoints;
+using Admission.Api.Middleware;
+using Admission.Application;
+using Admission.Infrastructure;
+using Admission.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Routing;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var settings = AdmissionSettings.FromConfiguration(builder.Configuration);
 builder.Services.AddSingleton(settings);
 builder.Services.AddSingleton(TimeProvider.System);
-builder.Services.AddDbContext<AdmissionDbContext>(o => o.UseNpgsql(settings.ConnectionString));
-builder.Services.AddScoped<ClassService>();
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(settings.ConnectionString);
 
+// Let malformed requests surface as exceptions so the middleware formats them uniformly.
+builder.Services.Configure<RouteHandlerOptions>(o => o.ThrowOnBadRequest = true);
 builder.Services.ConfigureHttpJsonOptions(o =>
     o.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
@@ -27,8 +31,8 @@ var app = builder.Build();
 
 await DatabaseInitializer.MigrateAsync(app.Services, app.Logger);
 
-app.UseCors();
 app.UseMiddleware<ErrorHandlingMiddleware>();
+app.UseCors();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapClassEndpoints();

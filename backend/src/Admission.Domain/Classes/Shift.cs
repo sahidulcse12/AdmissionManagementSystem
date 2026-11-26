@@ -1,4 +1,4 @@
-namespace Admission.Api.Domain;
+namespace Admission.Domain.Classes;
 
 /// <summary>School shifts. Stored as upper-case text in the database.</summary>
 public enum Shift

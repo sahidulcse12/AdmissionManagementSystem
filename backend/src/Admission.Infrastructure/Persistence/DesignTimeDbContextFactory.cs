@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace Admission.Api.Data;
+namespace Admission.Infrastructure.Persistence;
 
 /// <summary>Used only by `dotnet ef` to generate migrations; no database connection is opened.</summary>
-public sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AdmissionDbContext>
+internal sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AdmissionDbContext>
 {
     public AdmissionDbContext CreateDbContext(string[] args) =>
         new(new DbContextOptionsBuilder<AdmissionDbContext>()

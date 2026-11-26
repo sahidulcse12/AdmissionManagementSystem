@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
-namespace Admission.Api.Data;
+namespace Admission.Infrastructure.Persistence;
 
 /// <summary>Applies pending EF Core migrations at startup, retrying while the database starts.</summary>
 public static class DatabaseInitializer
