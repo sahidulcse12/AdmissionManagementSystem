@@ -26,7 +26,7 @@ public sealed class HoldService(
         return unitOfWork.ExecuteInTransactionAsync(async token =>
         {
             var schoolClass = await classes.LockAsync(classId, token) ?? throw ClassService.NotFound();
-            var now = clock.GetUtcNow();
+            var now = clock.Now();
 
             // Seats of overdue holds are already excluded from the count below; this only clears the
             // student's own overdue hold so it no longer blocks them through the unique index.
@@ -76,7 +76,7 @@ public sealed class HoldService(
             var hold = await holds.LockAsync(holdId, token) ?? throw NotFound();
             EnsureOwner(hold, studentId);
 
-            var now = clock.GetUtcNow();
+            var now = clock.Now();
             if (transition(hold, now)) await unitOfWork.SaveChangesAsync(token);
 
             var schoolClass = await classes.GetAsync(hold.ClassId, token) ?? throw ClassService.NotFound();
@@ -89,13 +89,13 @@ public sealed class HoldService(
         var studentId = StudentId.Parse(rawStudentId);
         var item = await holds.GetAsync(holdId, ct) ?? throw NotFound();
         EnsureOwner(item.Hold, studentId);
-        return HoldResponse.From(item, clock.GetUtcNow());
+        return HoldResponse.From(item, clock.Now());
     }
 
     public async Task<IReadOnlyList<HoldResponse>> ListMineAsync(string? rawStudentId, CancellationToken ct)
     {
         var studentId = StudentId.Parse(rawStudentId);
-        var now = clock.GetUtcNow();
+        var now = clock.Now();
         return (await holds.ListByStudentAsync(studentId, ct)).Select(h => HoldResponse.From(h, now)).ToList();
     }
 
@@ -103,7 +103,7 @@ public sealed class HoldService(
     public async Task<IReadOnlyList<HoldResponse>> ListForClassAsync(Guid classId, CancellationToken ct)
     {
         _ = await classes.GetAsync(classId, ct) ?? throw ClassService.NotFound();
-        var now = clock.GetUtcNow();
+        var now = clock.Now();
         return (await holds.ListByClassAsync(classId, ct)).Select(h => HoldResponse.From(h, now)).ToList();
     }
 

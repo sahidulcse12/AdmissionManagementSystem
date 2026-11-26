@@ -9,7 +9,7 @@ public sealed class ClassService(IClassRepository classes, IUnitOfWork unitOfWor
 {
     public async Task<ClassResponse> CreateAsync(CreateClassRequest request, CancellationToken ct)
     {
-        var entity = SchoolClass.Create(request.Name, request.Shift, request.Capacity, clock.GetUtcNow());
+        var entity = SchoolClass.Create(request.Name, request.Shift, request.Capacity, clock.Now());
 
         if (await classes.ExistsAsync(entity.NormalizedName, entity.Shift, ct))
             throw Duplicate(entity);
@@ -29,10 +29,10 @@ public sealed class ClassService(IClassRepository classes, IUnitOfWork unitOfWor
     }
 
     public async Task<IReadOnlyList<ClassResponse>> ListAsync(CancellationToken ct) =>
-        (await classes.ListWithUsageAsync(clock.GetUtcNow(), ct)).Select(ClassResponse.From).ToList();
+        (await classes.ListWithUsageAsync(clock.Now(), ct)).Select(ClassResponse.From).ToList();
 
     public async Task<ClassResponse> GetAsync(Guid id, CancellationToken ct) =>
-        ClassResponse.From(await classes.GetWithUsageAsync(id, clock.GetUtcNow(), ct) ?? throw NotFound());
+        ClassResponse.From(await classes.GetWithUsageAsync(id, clock.Now(), ct) ?? throw NotFound());
 
     internal static NotFoundException NotFound() => new("CLASS_NOT_FOUND", "Class not found.");
 
