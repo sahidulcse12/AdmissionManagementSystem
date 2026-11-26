@@ -1,8 +1,9 @@
 import { useCallback } from 'react'
 import { api } from '../../api/client'
 import type { SchoolClass } from '../../api/types'
-import { Alert, Empty, Loading, StatusBadge, formatDateTime } from '../../components/ui'
+import { Alert, Empty, Loading, StatusBadge } from '../../components/ui'
 import { usePolling } from '../../hooks/usePolling'
+import { formatDateTime } from '../../utils/format'
 
 /** Admin view of every hold and admission in one class. */
 export function ClassHoldsPanel({ cls, onClose }: { cls: SchoolClass; onClose: () => void }) {

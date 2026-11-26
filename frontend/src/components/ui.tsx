@@ -42,7 +42,3 @@ export function SeatBar({ cls }: { cls: SchoolClass }) {
     </div>
   )
 }
-
-export function formatDateTime(iso: string | null): string {
-  return iso ? new Date(iso).toLocaleString() : '—'
-}
