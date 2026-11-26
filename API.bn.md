@@ -2,14 +2,19 @@
 
 > English version: [API.md](API.md)
 
-Base URL: `http://localhost:8080`। সব body JSON। সময় ISO-8601 UTC ফরম্যাটে।
+Base URL: `http://localhost:8080`। সব request ও response JSON। সময় ISO-8601 UTC ফরম্যাটে।
+Assignment contract-এর প্রতিটি field response-এ আছে; UI-এর সুবিধার জন্য কয়েকটি বাড়তি field যোগ করা হয়েছে
+(contract অনুযায়ী এটি অনুমোদিত)।
 
 ## নিয়মাবলি
 
-**শিক্ষার্থী পরিচয়।** যেসব endpoint শিক্ষার্থীর পক্ষে কাজ করে, সেগুলোতে
-`X-Student-Id: <১৭ অঙ্কের জন্ম নিবন্ধন নম্বর>` header লাগবে। অন্য কোনো authentication নেই।
+**প্রতিটি shift একটি আলাদা class।** "Class 6 - Morning Shift" আর "Class 6 - Day Shift" দুটি আলাদা class,
+প্রত্যেকটির নিজস্ব `totalSeats`।
 
-**Error** সবসময় এই আকারে আসে:
+**শিক্ষার্থী পরিচয়।** শিক্ষার্থীর পক্ষে কাজ করা endpoint-এ
+`X-Student-Id: <১৭ অঙ্কের জন্ম নিবন্ধন নম্বর>` header লাগে। অন্য কোনো authentication নেই।
+
+**Error** সবসময় এই আকারে আসে (ভুল input-এ কখনো 500 নয়):
 
 ```json
 { "error": { "code": "NO_SEATS_AVAILABLE", "message": "No seats are available in this class." } }
@@ -22,110 +27,106 @@ Base URL: `http://localhost:8080`। সব body JSON। সময় ISO-8601 U
 | 404 | `CLASS_NOT_FOUND`, `HOLD_NOT_FOUND` |
 | 409 | `CLASS_ALREADY_EXISTS`, `NO_SEATS_AVAILABLE`, `ACTIVE_HOLD_EXISTS`, `ALREADY_ADMITTED`, `HOLD_CANCELLED`, `HOLD_ALREADY_CONFIRMED` |
 | 410 | `HOLD_EXPIRED` |
-| 500 | `INTERNAL_ERROR` |
-
-## অবজেক্ট
-
-**Class (ক্লাস)**
-
-```json
-{
-  "id": "6b0f…", "name": "Class 1", "shift": "MORNING", "capacity": 30,
-  "heldSeats": 2, "confirmedSeats": 10, "availableSeats": 18,
-  "createdAt": "2026-11-27T05:00:00.123456+00:00"
-}
-```
-
-**Hold**
-
-```json
-{
-  "id": "a91c…", "classId": "6b0f…", "className": "Class 1", "shift": "MORNING",
-  "studentId": "20150123456789012", "status": "HELD",
-  "createdAt": "…", "expiresAt": "…", "confirmedAt": null, "cancelledAt": null,
-  "remainingSeconds": 598, "serverTime": "…"
-}
-```
-
-`status` হতে পারে `HELD`, `CONFIRMED`, `EXPIRED` বা `CANCELLED`। `expiresAt` পার হয়ে যাওয়া `HELD` hold
-`EXPIRED` হিসেবে ফেরত আসে। hold `HELD` না হলে `remainingSeconds` হয় `0`।
 
 ## Endpoint সমূহ
 
-### `POST /classes` — ক্লাস তৈরি (অ্যাডমিন)
+### ১. `POST /classes` — নতুন class তৈরি
 
 ```json
-{ "name": "Class 1", "shift": "MORNING", "capacity": 30 }
+// request
+{ "name": "Class 6 - Morning Shift", "totalSeats": 120 }
+
+// 201 response (Location: /classes/{id})
+{ "id": "6b0f…", "name": "Class 6 - Morning Shift", "totalSeats": 120,
+  "heldSeats": 0, "confirmedSeats": 0, "availableSeats": 120, "createdAt": "…" }
 ```
 
-- `shift`: `MORNING`, `DAY` অথবা `EVENING` (বড়/ছোট হাতের অক্ষর নির্বিশেষে)। `capacity`: ১–১০০০। `name`: ১–১০০ অক্ষর।
-- `201 Created` + `Location: /classes/{id}` + Class।
-- `400 VALIDATION_ERROR`; `409 CLASS_ALREADY_EXISTS` (একই শিফটে একই নাম)।
+- `name`: ১–১০০ অক্ষর, অনন্য (বড়/ছোট হাতের অক্ষর নির্বিশেষে)। `totalSeats`: ১–১০০০০ পূর্ণসংখ্যা।
+- `400 VALIDATION_ERROR` / `INVALID_REQUEST`; `409 CLASS_ALREADY_EXISTS`।
 
-### `GET /classes` — বর্তমান সিট সংখ্যাসহ ক্লাসের তালিকা
+### ২. `GET /classes` — seat-এর হিসাবসহ সব class
 
-`200` + `Class[]`, নাম ও শিফট অনুযায়ী সাজানো।
+```json
+[ { "id": "6b0f…", "name": "Class 6 - Morning Shift", "totalSeats": 120,
+    "heldSeats": 15, "confirmedSeats": 80, "availableSeats": 25, "createdAt": "…" } ]
+```
 
-### `GET /classes/{classId}` — একটি ক্লাস
+### ৩. `GET /classes/{classId}` — একটি class-এর seat-এর অবস্থা
 
-`200` + Class · `400 INVALID_ID` · `404 CLASS_NOT_FOUND`।
+উপরের মতোই অবজেক্ট। `400 INVALID_ID` · `404 CLASS_NOT_FOUND`।
 
-### `GET /classes/{classId}/holds` — একটি ক্লাসের সব hold ও ভর্তি (অ্যাডমিন)
-
-`200` + `Hold[]`, নতুনগুলো আগে · `404 CLASS_NOT_FOUND`।
-
-### `POST /classes/{classId}/holds` — সিট রিজার্ভ
+### ৪. `POST /classes/{classId}/holds` — আবেদন (seat hold)
 
 `X-Student-Id` header বাধ্যতামূলক। কোনো body নেই।
 
-- `201 Created` + `Location: /holds/{id}` + Hold (`status: HELD`, `expiresAt = now + HOLD_DURATION_SECONDS`)।
-- `400 MISSING_STUDENT_ID | INVALID_STUDENT_ID | INVALID_ID`
-- `404 CLASS_NOT_FOUND`
-- `409 NO_SEATS_AVAILABLE` — ক্লাস পূর্ণ।
-- `409 ACTIVE_HOLD_EXISTS` — শিক্ষার্থীর এই ক্লাসে আগে থেকেই একটি সক্রিয় hold আছে।
-- `409 ALREADY_ADMITTED` — শিক্ষার্থী এই ক্লাসে আগেই ভর্তি হয়েছে।
+```json
+// 201 response (Location: /holds/{holdId})
+{ "holdId": "a91c…", "classId": "6b0f…", "className": "Class 6 - Morning Shift",
+  "studentId": "20152691234567890", "status": "HELD", "expiresAt": "2026-11-01T04:10:00+00:00",
+  "createdAt": "…", "confirmedAt": null, "cancelledAt": null, "remainingSeconds": 600, "serverTime": "…" }
+```
 
-### `GET /holds/{holdId}` — hold দেখা (শুধু মালিক)
+- `409 NO_SEATS_AVAILABLE` — seat নেই।
+- `409 ACTIVE_HOLD_EXISTS` / `409 ALREADY_ADMITTED` — এই class-এ শিক্ষার্থীর আগে থেকেই সক্রিয় আবেদন বা ভর্তি আছে।
+- `400 MISSING_STUDENT_ID | INVALID_STUDENT_ID | INVALID_ID` · `404 CLASS_NOT_FOUND`।
 
-`200` + Hold · `403 HOLD_NOT_OWNED` · `404 HOLD_NOT_FOUND`।
+### ৫. `GET /holds/{holdId}` — আবেদনের বর্তমান অবস্থা
 
-### `POST /holds/{holdId}/confirm` — ভর্তি নিশ্চিত (পেমেন্ট সফল ধরে নেওয়া হয়)
+```json
+{ "holdId": "a91c…", "classId": "6b0f…", "status": "HELD", "expiresAt": "…", … }
+```
 
-শুধু মালিক। **Idempotent**: আবার কল করলে একই body সহ `200` ফেরত আসে এবং নতুন ভর্তি তৈরি হয় না।
+`status` হতে পারে `HELD`, `CONFIRMED`, `EXPIRED` বা `CANCELLED`। `expiresAt` পেরিয়ে যাওয়া `HELD` hold সাথে
+সাথেই `EXPIRED` দেখায়। এখানে `X-Student-Id` ঐচ্ছিক (contract-এ এটি নেই); পাঠানো হলে এবং অন্য শিক্ষার্থীর হলে
+`403 HOLD_NOT_OWNED`। `404 HOLD_NOT_FOUND`।
 
-- `200` + Hold (`status: CONFIRMED`)
-- `403 HOLD_NOT_OWNED` · `404 HOLD_NOT_FOUND`
-- `409 HOLD_CANCELLED` — বাতিল hold confirm করা যায় না।
-- `410 HOLD_EXPIRED` — মেয়াদোত্তীর্ণ hold confirm করা যায় না।
+### ৬. `POST /holds/{holdId}/confirm` — ভর্তি ফি জমা, ভর্তি নিশ্চিত
 
-### `DELETE /holds/{holdId}` — hold বাতিল
+`X-Student-Id` header বাধ্যতামূলক (শুধু মালিক)। পেমেন্ট সফল ধরে নেওয়া হয়।
 
-শুধু মালিক। সাথে সাথে সিট খালি হয়। আবার কল করলে `200` আসে (কোনো পরিবর্তন হয় না)।
+```json
+// 200 response
+{ "holdId": "a91c…", "status": "CONFIRMED", "confirmedAt": "…", … }
+```
 
-- `200` + Hold (`status: CANCELLED`)
-- `403 HOLD_NOT_OWNED` · `404 HOLD_NOT_FOUND`
-- `409 HOLD_ALREADY_CONFIRMED` — নিশ্চিত ভর্তি বাতিল করা যায় না।
-- `410 HOLD_EXPIRED`
+- Idempotent: আবার confirm করলে একই body সহ `200`; `confirmedSeats` একবারই বাড়ে।
+- `410 HOLD_EXPIRED` · `409 HOLD_CANCELLED` · `403 HOLD_NOT_OWNED` · `404 HOLD_NOT_FOUND`।
 
-### `GET /me/holds` — শিক্ষার্থীর ইতিহাস
+### ৭. `DELETE /holds/{holdId}` — আবেদন বাতিল
 
-`X-Student-Id` header বাধ্যতামূলক। `200` + `Hold[]`, নতুনগুলো আগে, সব অবস্থার।
+`X-Student-Id` header বাধ্যতামূলক (শুধু মালিক)। সফল হলে **`204 No Content`**; seat খালি হয়।
+আবার কল করলেও `204`।
 
-### `GET /health`
+- `409 HOLD_ALREADY_CONFIRMED` (নিশ্চিত ভর্তি চূড়ান্ত) · `410 HOLD_EXPIRED` · `403` · `404`।
 
-`200 {"status":"ok"}` — Docker health check-এর জন্য ব্যবহৃত।
+### ৮. `GET /me/holds` — এই শিক্ষার্থীর সব আবেদন
+
+`X-Student-Id` header বাধ্যতামূলক। নতুনগুলো আগে, সব অবস্থার।
+
+```json
+[ { "holdId": "a91c…", "classId": "6b0f…", "className": "Class 6 - Morning Shift",
+    "status": "HELD", "expiresAt": "…", … } ]
+```
+
+### বাড়তি endpoint
+
+| Endpoint | উদ্দেশ্য |
+|---|---|
+| `GET /classes/{classId}/holds` | অ্যাডমিনের জন্য একটি class-এর সব আবেদন/ভর্তি |
+| `GET /health` | Docker health check-এর জন্য `{"status":"ok"}` |
 
 ## উদাহরণ (curl)
 
 ```bash
 API=http://localhost:8080
-STUDENT=20150123456789012
+STUDENT=20152691234567890
 
 CLASS=$(curl -s -X POST $API/classes -H 'Content-Type: application/json' \
-  -d '{"name":"Class 1","shift":"MORNING","capacity":2}' | jq -r .id)
+  -d '{"name":"Class 6 - Morning Shift","totalSeats":120}' | jq -r .id)
 
-HOLD=$(curl -s -X POST $API/classes/$CLASS/holds -H "X-Student-Id: $STUDENT" | jq -r .id)
+HOLD=$(curl -s -X POST $API/classes/$CLASS/holds -H "X-Student-Id: $STUDENT" | jq -r .holdId)
 
-curl -s -X POST $API/holds/$HOLD/confirm -H "X-Student-Id: $STUDENT" | jq .status   # "CONFIRMED"
+curl -s $API/holds/$HOLD | jq .status                                          # "HELD"
+curl -s -X POST $API/holds/$HOLD/confirm -H "X-Student-Id: $STUDENT" | jq .status  # "CONFIRMED"
 curl -s $API/me/holds -H "X-Student-Id: $STUDENT" | jq '.[].status'
 ```
