@@ -1,4 +1,5 @@
 using Admission.Application.Abstractions;
+using Admission.Infrastructure.BackgroundJobs;
 using Admission.Infrastructure.Persistence;
 using Admission.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,8 @@ public static class DependencyInjection
         services.AddDbContext<AdmissionDbContext>(o => o.UseNpgsql(connectionString));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IClassRepository, ClassRepository>();
+        services.AddScoped<IHoldRepository, HoldRepository>();
+        services.AddHostedService<HoldExpirySweeper>();
         return services;
     }
 }
