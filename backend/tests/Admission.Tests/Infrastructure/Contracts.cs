@@ -5,18 +5,16 @@ namespace Admission.Tests.Infrastructure;
 public sealed record ClassDto(
     Guid Id,
     string Name,
-    string Shift,
-    int Capacity,
+    int TotalSeats,
     int HeldSeats,
     int ConfirmedSeats,
     int AvailableSeats,
     DateTimeOffset CreatedAt);
 
 public sealed record HoldDto(
-    Guid Id,
+    Guid HoldId,
     Guid ClassId,
     string ClassName,
-    string Shift,
     string StudentId,
     string Status,
     DateTimeOffset CreatedAt,
@@ -24,4 +22,8 @@ public sealed record HoldDto(
     DateTimeOffset? ConfirmedAt,
     DateTimeOffset? CancelledAt,
     int RemainingSeconds,
-    DateTimeOffset ServerTime);
+    DateTimeOffset ServerTime)
+{
+    /// <summary>Shorthand used throughout the tests; the wire field is <c>holdId</c>.</summary>
+    public Guid Id => HoldId;
+}
