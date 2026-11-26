@@ -1,13 +1,11 @@
-using System.Text.Json.Serialization;
 using Admission.Api.Configuration;
-using Admission.Api.Endpoints;
+using Admission.Api.Controllers;
 using Admission.Api.Middleware;
 using Admission.Api.OpenApi;
 using Admission.Application;
 using Admission.Application.Holds;
 using Admission.Infrastructure;
 using Admission.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Routing;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,11 +19,7 @@ builder.Services.AddApplication(new HoldOptions
 });
 builder.Services.AddInfrastructure(settings.ConnectionString);
 
-// Let malformed requests surface as exceptions so the middleware formats them uniformly.
-builder.Services.Configure<RouteHandlerOptions>(o => o.ThrowOnBadRequest = true);
-builder.Services.ConfigureHttpJsonOptions(o =>
-    o.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
-
+builder.Services.AddAdmissionControllers();
 builder.Services.AddProblemDetails();
 builder.Services.AddAdmissionApiVersioning();
 builder.Services.AddAdmissionSwagger();
@@ -46,12 +40,7 @@ app.UseCors();
 app.UseAdmissionSwagger();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" })).ExcludeFromDescription();
-
-// Paths stay exactly as in the assignment contract; the version comes from the
-// X-Api-Version header or ?api-version= query and defaults to 1.0.
-var v1 = app.MapVersionedApi();
-v1.MapClassEndpoints();
-v1.MapHoldEndpoints();
+app.MapControllers();
 
 app.Run();
 

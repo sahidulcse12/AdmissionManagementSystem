@@ -31,7 +31,7 @@ backend/
 │   ├── Admission.Domain          # Entity ও ব্যবসায়িক নিয়ম। কোনো নির্ভরতা নেই।
 │   ├── Admission.Application     # Use case, DTO, repository interface। শুধু Domain-এর উপর নির্ভরশীল।
 │   ├── Admission.Infrastructure  # EF Core, PostgreSQL, repository, migration, background job।
-│   └── Admission.Api             # HTTP endpoint, error middleware, configuration, composition root।
+│   └── Admission.Api             # Controller, error middleware, Swagger, versioning, composition root।
 └── tests/Admission.Tests         # Domain unit test + আসল PostgreSQL-এ API integration test।
 ```
 
@@ -42,7 +42,19 @@ backend/
 | Domain | `SchoolClass`, `Hold`, `HoldStatus`, `StudentId`, `DomainException` | নিয়ম (সিট ১–১০০০০, ১৭ অঙ্কের শিক্ষার্থী আইডি) এবং hold-এর অবস্থা পরিবর্তনের নিয়ম (`Confirm`, `Cancel`, `StatusAt`)। |
 | Application | `ClassService`, `HoldService`, `IClassRepository`, `IHoldRepository`, `IUnitOfWork` | Transaction-এর ভেতরে use case পরিচালনা করে; কখনো SQL স্পর্শ করে না। |
 | Infrastructure | `AdmissionDbContext`, `ClassRepository`, `HoldRepository`, `UnitOfWork`, `HoldExpirySweeper` | Row lock, সিট গণনার query, constraint ম্যাপিং, স্টার্টআপে migration। |
-| Api | `ClassEndpoints`, `HoldEndpoints`, `ErrorHandlingMiddleware`, `SwaggerSetup`, `ApiVersioningSetup` | HTTP ↔ use case এবং exception ↔ status code রূপান্তর; `/swagger`-এ Swagger UI; `X-Api-Version` header বা `?api-version=` দিয়ে API versioning (ডিফল্ট 1.0)। |
+| Api | `ClassesController`, `ClassHoldsController`, `HoldsController`, `MeController`, `ErrorHandlingMiddleware`, `SwaggerSetup`, `ApiVersioningSetup` | HTTP ↔ use case এবং exception ↔ status code রূপান্তর; `/swagger`-এ Swagger UI; `X-Api-Version` header বা `?api-version=` দিয়ে API versioning (ডিফল্ট 1.0)। |
+
+### Controller সমূহ
+
+| Controller | Route |
+|---|---|
+| `ClassesController` | `POST /classes`, `GET /classes`, `GET /classes/{classId}` |
+| `ClassHoldsController` | `POST /classes/{classId}/holds` (আবেদন), `GET /classes/{classId}/holds` (অ্যাডমিন) |
+| `HoldsController` | `GET /holds/{holdId}`, `POST /holds/{holdId}/confirm`, `DELETE /holds/{holdId}` |
+| `MeController` | `GET /me/holds` |
+
+সবগুলো `ApiControllerBase` (`[ApiController]`, `[ApiVersion(1.0)]`) থেকে তৈরি। Controller শুধু HTTP-কে Application স্তরের
+use case-এ রূপান্তর করে; ব্যবসায়িক নিয়ম Domain ও Application-এ থাকে।
 
 ## ডাটাবেস ডিজাইন
 

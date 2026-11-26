@@ -24,23 +24,12 @@ public static class ApiVersioningSetup
                     new HeaderApiVersionReader(HeaderName),
                     new QueryStringApiVersionReader(QueryName));
             })
+            .AddMvc()
             .AddApiExplorer(o =>
             {
                 o.GroupNameFormat = "'v'VVV";
                 o.AssumeDefaultVersionWhenUnspecified = true;
             });
         return services;
-    }
-
-    public static RouteGroupBuilder MapVersionedApi(this WebApplication app)
-    {
-        var versions = app.NewApiVersionSet()
-            .HasApiVersion(V1)
-            .ReportApiVersions()
-            .Build();
-
-        return app.MapGroup(string.Empty)
-            .WithApiVersionSet(versions)
-            .MapToApiVersion(V1);
     }
 }

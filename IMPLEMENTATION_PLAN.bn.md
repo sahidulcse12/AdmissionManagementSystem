@@ -13,7 +13,7 @@
 
 | স্তর | পছন্দ |
 |---|---|
-| ব্যাকএন্ড | C# / .NET 9, ASP.NET Core Minimal API, EF Core 9 + Npgsql |
+| ব্যাকএন্ড | C# / .NET 9, ASP.NET Core Web API (controller), EF Core 9 + Npgsql |
 | ডাটাবেস | PostgreSQL 16 |
 | ফ্রন্টএন্ড | React 19 + TypeScript + Vite, Vitest + Testing Library |
 | ইনফ্রাস্ট্রাকচার | Docker Compose (db, api, web), নামযুক্ত ভলিউম `pgdata` |

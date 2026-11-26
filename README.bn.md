@@ -25,7 +25,7 @@ backend process চললেও — সিস্টেম কখনো `totalSea
 
 | স্তর | প্রযুক্তি |
 |---|---|
-| ব্যাকএন্ড | C# · .NET 9 · ASP.NET Core Minimal API · EF Core 9 · Clean Architecture |
+| ব্যাকএন্ড | C# · .NET 9 · ASP.NET Core Web API (controller) · EF Core 9 · Clean Architecture |
 | ডাটাবেস | PostgreSQL 16 |
 | ফ্রন্টএন্ড | React 19 · TypeScript · Vite |
 | টেস্ট | xUnit · Testcontainers (আসল PostgreSQL) · Vitest · Testing Library |
@@ -170,7 +170,7 @@ docker run --rm -v "$PWD/frontend:/app" -w /app node:22-alpine sh -c "npm ci && 
 │   ├── src/Admission.Domain/          # entity, অবস্থা পরিবর্তনের নিয়ম, ব্যবসায়িক নিয়ম
 │   ├── src/Admission.Application/     # use case, DTO, repository interface
 │   ├── src/Admission.Infrastructure/  # EF Core, PostgreSQL, migration, expiry কাজ
-│   ├── src/Admission.Api/             # endpoint, error middleware, স্টার্টআপ
+│   ├── src/Admission.Api/             # controller, error middleware, Swagger, versioning, স্টার্টআপ
 │   └── tests/Admission.Tests/         # unit + integration + concurrency টেস্ট
 ├── frontend/                          # React + TypeScript (Vite), nginx image
 ├── docker-compose.yml

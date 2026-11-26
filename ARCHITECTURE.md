@@ -31,7 +31,7 @@ backend/
 │   ├── Admission.Domain          # Entities and business rules. No dependencies.
 │   ├── Admission.Application     # Use cases, DTOs, repository interfaces. Depends on Domain.
 │   ├── Admission.Infrastructure  # EF Core, PostgreSQL, repositories, migrations, background job.
-│   └── Admission.Api             # HTTP endpoints, error middleware, configuration, composition root.
+│   └── Admission.Api             # Controllers, error middleware, Swagger, versioning, composition root.
 └── tests/Admission.Tests         # Domain unit tests + API integration tests on real PostgreSQL.
 ```
 
@@ -42,7 +42,19 @@ Dependencies point inward only: `Api → Infrastructure → Application → Doma
 | Domain | `SchoolClass`, `Hold`, `HoldStatus`, `StudentId`, `DomainException` | Invariants (totalSeats 1–10000, 17-digit student id) and the hold state machine (`Confirm`, `Cancel`, `StatusAt`). |
 | Application | `ClassService`, `HoldService`, `IClassRepository`, `IHoldRepository`, `IUnitOfWork` | Orchestrates a use case inside a transaction; never touches SQL. |
 | Infrastructure | `AdmissionDbContext`, `ClassRepository`, `HoldRepository`, `UnitOfWork`, `HoldExpirySweeper` | Row locks, seat counting queries, constraint mapping, migrations at startup. |
-| Api | `ClassEndpoints`, `HoldEndpoints`, `ErrorHandlingMiddleware`, `SwaggerSetup`, `ApiVersioningSetup` | Maps HTTP ↔ use cases and exceptions ↔ status codes; Swagger UI at `/swagger`; API versioning by `X-Api-Version` header or `?api-version=` (default 1.0). |
+| Api | `ClassesController`, `ClassHoldsController`, `HoldsController`, `MeController`, `ErrorHandlingMiddleware`, `SwaggerSetup`, `ApiVersioningSetup` | Maps HTTP ↔ use cases and exceptions ↔ status codes; Swagger UI at `/swagger`; API versioning by `X-Api-Version` header or `?api-version=` (default 1.0). |
+
+### Controllers
+
+| Controller | Routes |
+|---|---|
+| `ClassesController` | `POST /classes`, `GET /classes`, `GET /classes/{classId}` |
+| `ClassHoldsController` | `POST /classes/{classId}/holds` (apply), `GET /classes/{classId}/holds` (admin) |
+| `HoldsController` | `GET /holds/{holdId}`, `POST /holds/{holdId}/confirm`, `DELETE /holds/{holdId}` |
+| `MeController` | `GET /me/holds` |
+
+All inherit `ApiControllerBase` (`[ApiController]`, `[ApiVersion(1.0)]`). Controllers only translate HTTP to
+use cases in the Application layer; business rules live in Domain and Application.
 
 ## Database design
 
