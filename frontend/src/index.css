@@ -86,3 +86,26 @@ tr.selected td { background: #f3f7fd; }
 .badge-confirmed { background: #e3f4ea; color: #145c33; }
 .badge-expired { background: #eef0f3; color: #4d5766; }
 .badge-cancelled { background: #fdecea; color: #8a1f13; }
+
+.student-bar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.student-id { font-size: 1.15rem; font-weight: 600; letter-spacing: 0.04em; }
+
+.class-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.class-card { border: 1px solid var(--border); border-radius: 8px; padding: 14px; display: grid; gap: 10px; align-content: start; }
+.class-card header { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+.class-card h3 { margin: 0; font-size: 1.05rem; }
+.class-card .seatbar { width: 100%; }
+.seats { margin: 0; }
+.seats strong { font-size: 1.3rem; color: var(--confirmed); }
+.seats.full strong { color: var(--danger); }
+
+.hold-card {
+  display: grid; grid-template-columns: 1fr auto; gap: 12px 16px; align-items: center;
+  border: 1px solid #f1d48f; background: #fffaf0; border-radius: 8px; padding: 14px;
+}
+.hold-card.urgent { border-color: #e9a99f; background: #fdf3f1; }
+.hold-title { font-weight: 600; font-size: 1.05rem; }
+.countdown { font-size: 1.9rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.hold-card.urgent .countdown { color: var(--danger); }
+.hold-actions { grid-column: 1 / -1; display: flex; gap: 10px; flex-wrap: wrap; }
+.hold-card .alert { grid-column: 1 / -1; margin-top: 0; }
