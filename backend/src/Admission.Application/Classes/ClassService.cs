@@ -25,14 +25,14 @@ public sealed class ClassService(IClassRepository classes, IUnitOfWork unitOfWor
             throw Duplicate(entity);
         }
 
-        return ClassResponse.From(entity);
+        return ClassResponse.From(new ClassWithUsage(entity, 0, 0));
     }
 
     public async Task<IReadOnlyList<ClassResponse>> ListAsync(CancellationToken ct) =>
-        (await classes.ListAsync(ct)).Select(ClassResponse.From).ToList();
+        (await classes.ListWithUsageAsync(clock.GetUtcNow(), ct)).Select(ClassResponse.From).ToList();
 
     public async Task<ClassResponse> GetAsync(Guid id, CancellationToken ct) =>
-        ClassResponse.From(await classes.GetAsync(id, ct) ?? throw NotFound());
+        ClassResponse.From(await classes.GetWithUsageAsync(id, clock.GetUtcNow(), ct) ?? throw NotFound());
 
     internal static NotFoundException NotFound() => new("CLASS_NOT_FOUND", "Class not found.");
 

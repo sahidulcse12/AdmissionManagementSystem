@@ -13,6 +13,7 @@ public static class DependencyInjection
         services.AddDbContext<AdmissionDbContext>(o => o.UseNpgsql(connectionString));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IClassRepository, ClassRepository>();
+        services.AddScoped<IHoldRepository, HoldRepository>();
         return services;
     }
 }
