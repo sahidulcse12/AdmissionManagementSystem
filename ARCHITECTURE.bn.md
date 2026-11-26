@@ -42,7 +42,7 @@ backend/
 | Domain | `SchoolClass`, `Hold`, `HoldStatus`, `StudentId`, `DomainException` | নিয়ম (সিট ১–১০০০০, ১৭ অঙ্কের শিক্ষার্থী আইডি) এবং hold-এর অবস্থা পরিবর্তনের নিয়ম (`Confirm`, `Cancel`, `StatusAt`)। |
 | Application | `ClassService`, `HoldService`, `IClassRepository`, `IHoldRepository`, `IUnitOfWork` | Transaction-এর ভেতরে use case পরিচালনা করে; কখনো SQL স্পর্শ করে না। |
 | Infrastructure | `AdmissionDbContext`, `ClassRepository`, `HoldRepository`, `UnitOfWork`, `HoldExpirySweeper` | Row lock, সিট গণনার query, constraint ম্যাপিং, স্টার্টআপে migration। |
-| Api | `ClassEndpoints`, `HoldEndpoints`, `ErrorHandlingMiddleware` | HTTP ↔ use case এবং exception ↔ status code রূপান্তর। |
+| Api | `ClassEndpoints`, `HoldEndpoints`, `ErrorHandlingMiddleware`, `SwaggerSetup`, `ApiVersioningSetup` | HTTP ↔ use case এবং exception ↔ status code রূপান্তর; `/swagger`-এ Swagger UI; `X-Api-Version` header বা `?api-version=` দিয়ে API versioning (ডিফল্ট 1.0)। |
 
 ## ডাটাবেস ডিজাইন
 

@@ -15,7 +15,7 @@
 | ব্যাকএন্ড | Domain / Application / Infrastructure / Api স্তর, EF Core কনফিগ, migration লেখা | Clean Architecture চাওয়া; locking ডিজাইন পর্যালোচনা |
 | Concurrency | ক্লাসভিত্তিক `SELECT … FOR UPDATE`, hold row lock, আংশিক unique index-এর প্রস্তাব | Race টেস্ট ও আসল `curl` race দিয়ে যাচাই |
 | ফ্রন্টএন্ড | React/TypeScript স্ক্রিন, API ক্লায়েন্ট, polling ও countdown লেখা | প্রতিটি স্ক্রিন brief-এর সাথে মিলিয়ে দেখা |
-| টেস্ট | ৬৩টি ব্যাকএন্ড টেস্ট (concurrency ও দুই-instance টেস্টসহ) ও ২১টি ফ্রন্টএন্ড টেস্ট লেখা | বারবার চালানো, ব্যর্থতা পরীক্ষা |
+| টেস্ট | ৬৮টি ব্যাকএন্ড টেস্ট (concurrency ও দুই-instance টেস্টসহ) ও ২১টি ফ্রন্টএন্ড টেস্ট লেখা | বারবার চালানো, ব্যর্থতা পরীক্ষা |
 | Docker / ডকুমেন্ট | Dockerfile, compose ফাইল, README ও অন্যান্য ডকুমেন্ট লেখা | `docker compose up`, ডেটা সংরক্ষণ ও মেয়াদ হাতে-কলমে যাচাই |
 
 ## AI কোথায় ভুল করেছিল, আর আমি কীভাবে ধরলাম
