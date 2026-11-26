@@ -7,4 +7,21 @@ public sealed record ClassDto(
     string Name,
     string Shift,
     int Capacity,
+    int HeldSeats,
+    int ConfirmedSeats,
+    int AvailableSeats,
     DateTimeOffset CreatedAt);
+
+public sealed record HoldDto(
+    Guid Id,
+    Guid ClassId,
+    string ClassName,
+    string Shift,
+    string StudentId,
+    string Status,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset ExpiresAt,
+    DateTimeOffset? ConfirmedAt,
+    DateTimeOffset? CancelledAt,
+    int RemainingSeconds,
+    DateTimeOffset ServerTime);
