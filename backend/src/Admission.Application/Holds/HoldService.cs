@@ -54,6 +54,36 @@ public sealed class HoldService(
         }, ct);
     }
 
+    /// <summary>
+    /// Confirms admission. The hold row is locked for the transaction, so concurrent confirmations
+    /// are serialised: the first one confirms, later ones see CONFIRMED and return the same result.
+    /// Expiry is evaluated after the lock is acquired, so a hold cannot expire mid-confirmation.
+    /// </summary>
+    public Task<HoldResponse> ConfirmAsync(Guid holdId, string? rawStudentId, CancellationToken ct) =>
+        TransitionAsync(holdId, rawStudentId, (hold, now) => hold.Confirm(now), ct);
+
+    /// <summary>Cancels a HELD hold and releases its seat. Repeating the call is harmless.</summary>
+    public Task<HoldResponse> CancelAsync(Guid holdId, string? rawStudentId, CancellationToken ct) =>
+        TransitionAsync(holdId, rawStudentId, (hold, now) => hold.Cancel(now), ct);
+
+    private Task<HoldResponse> TransitionAsync(
+        Guid holdId, string? rawStudentId, Func<Hold, DateTimeOffset, bool> transition, CancellationToken ct)
+    {
+        var studentId = StudentId.Parse(rawStudentId);
+
+        return unitOfWork.ExecuteInTransactionAsync(async token =>
+        {
+            var hold = await holds.LockAsync(holdId, token) ?? throw NotFound();
+            EnsureOwner(hold, studentId);
+
+            var now = clock.GetUtcNow();
+            if (transition(hold, now)) await unitOfWork.SaveChangesAsync(token);
+
+            var schoolClass = await classes.GetAsync(hold.ClassId, token) ?? throw ClassService.NotFound();
+            return HoldResponse.From(new HoldWithClass(hold, schoolClass), now);
+        }, ct);
+    }
+
     public async Task<HoldResponse> GetAsync(Guid holdId, string? rawStudentId, CancellationToken ct)
     {
         var studentId = StudentId.Parse(rawStudentId);
