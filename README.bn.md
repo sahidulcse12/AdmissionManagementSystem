@@ -72,6 +72,20 @@ docker compose --profile multi up --build
 `held + confirmed` কখনো `totalSeats`-এর বেশি হয় না। কীভাবে নিশ্চিত করা হয়েছে তা
 [ASSUMPTIONS.bn.md](ASSUMPTIONS.bn.md)-এ লেখা আছে।
 
+### Backend বা frontend local-এ চালানো (development)
+
+Docker-এর `api` container আগে থেকেই 8080 পোর্টে চলে, তাই Visual Studio / `dotnet run` থেকে একই পোর্টে backend
+চালালে *"address already in use"* error আসে। শুধু ডাটাবেস Docker-এ রাখুন:
+
+```bash
+docker compose stop api api2 web     # 8080/8081/5173 পোর্ট খালি করে, PostgreSQL চালু থাকে
+cd backend && dotnet run --project src/Admission.Api        # http://localhost:8080
+cd frontend && npm run dev                                  # http://localhost:5173
+```
+
+Local backend ডিফল্টভাবে `Host=localhost;Port=5432;Database=admission;Username=admission;Password=admission`
+(Docker-এর ডাটাবেস)-এ যুক্ত হয়। প্রয়োজনে `DATABASE_URL` environment variable দিয়ে বদলানো যায়।
+
 ## কনফিগারেশন
 
 সব সেটিং environment variable দিয়ে হয় ([.env.example](.env.example) দেখুন)।
