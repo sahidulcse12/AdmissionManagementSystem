@@ -8,10 +8,6 @@ using Testcontainers.PostgreSql;
 
 namespace Admission.Tests.Infrastructure;
 
-/// <summary>
-/// Starts a real PostgreSQL container and hosts the API in-memory against it.
-/// Time is controlled by a <see cref="FakeTimeProvider"/> so expiry can be tested without sleeping.
-/// </summary>
 public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     public const int HoldDurationSeconds = 600;

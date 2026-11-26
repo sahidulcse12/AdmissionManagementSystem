@@ -1,8 +1,3 @@
-/**
- * localStorage wrapper that never throws (private mode, blocked storage, quota).
- * Only remembers *which* student and hold the user was working with — the hold's
- * actual state is always re-read from the backend.
- */
 const PREFIX = 'admission.'
 
 export const storage = {

@@ -10,10 +10,6 @@ interface PollingState<T> {
   refresh: () => Promise<void>
 }
 
-/**
- * Loads data immediately and then every `intervalMs` while the tab is visible.
- * The latest successful data is kept when a refresh fails, so the UI does not flash empty.
- */
 export function usePolling<T>(load: () => Promise<T>, intervalMs = DEFAULT_REFRESH_MS, enabled = true): PollingState<T> {
   const [data, setData] = useState<T>()
   const [error, setError] = useState<string>()

@@ -4,12 +4,6 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Admission.Tests;
 
-/// <summary>
-/// Bonus requirement: two backend instances sharing one database must still never overbook.
-/// <see cref="WebApplicationFactory{TEntryPoint}.WithWebHostBuilder"/> starts a second, fully
-/// separate host (own DI container, DbContexts and connection pool) against the same PostgreSQL,
-/// so the only thing coordinating the two is the database itself — exactly as with two processes.
-/// </summary>
 [Collection(ApiCollection.Name)]
 public sealed class MultiInstanceTests(ApiFactory factory)
 {

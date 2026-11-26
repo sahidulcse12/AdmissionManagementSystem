@@ -5,7 +5,6 @@ import { Alert, Empty, Loading, StatusBadge } from '../../components/ui'
 import { usePolling } from '../../hooks/usePolling'
 import { formatDateTime } from '../../utils/format'
 
-/** Admin view of every hold and admission in one class. */
 export function ClassHoldsPanel({ cls, onClose }: { cls: SchoolClass; onClose: () => void }) {
   const load = useCallback(() => api.listClassHolds(cls.id), [cls.id])
   const { data: holds, error, loading } = usePolling(load)

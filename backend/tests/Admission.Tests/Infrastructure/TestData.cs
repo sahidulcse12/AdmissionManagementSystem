@@ -11,10 +11,8 @@ public static class TestData
         Converters = { new JsonStringEnumConverter() },
     };
 
-    /// <summary>Unique class name so tests sharing one database never collide.</summary>
     public static string UniqueName(string prefix = "Class") => $"{prefix}-{Guid.NewGuid():N}"[..30];
 
-    /// <summary>A unique 17-digit birth registration number.</summary>
     public static string StudentId()
     {
         var digits = Random.Shared.NextInt64(10_000_000_000_000_000, 99_999_999_999_999_999);

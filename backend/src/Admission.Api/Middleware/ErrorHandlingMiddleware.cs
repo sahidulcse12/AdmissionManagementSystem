@@ -3,10 +3,6 @@ using Admission.Domain.Common;
 
 namespace Admission.Api.Middleware;
 
-/// <summary>
-/// Translates domain/application exceptions into HTTP responses with a uniform body:
-/// <c>{ "error": { "code": "...", "message": "..." } }</c>.
-/// </summary>
 public sealed class ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger)
 {
     public async Task InvokeAsync(HttpContext context)

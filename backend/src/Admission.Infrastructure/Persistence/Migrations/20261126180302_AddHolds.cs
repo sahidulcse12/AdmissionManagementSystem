@@ -5,10 +5,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Admission.Infrastructure.Persistence.Migrations
 {
-    /// <inheritdoc />
     public partial class AddHolds : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -59,7 +57,6 @@ namespace Admission.Infrastructure.Persistence.Migrations
                 filter: "status IN ('HELD','CONFIRMED')");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

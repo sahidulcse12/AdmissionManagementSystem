@@ -4,10 +4,8 @@ import { Empty, Loading, SeatBar } from '../../components/ui'
 interface Props {
   classes: SchoolClass[] | undefined
   loading: boolean
-  /** Class ids where the student already holds a seat or is admitted. */
   blockedClassIds: Set<string>
   reservingId: string | undefined
-  /** True when no student ID has been entered yet. */
   disabled?: boolean
   onReserve: (cls: SchoolClass) => void
 }

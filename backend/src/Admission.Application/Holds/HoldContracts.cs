@@ -3,10 +3,6 @@ using Admission.Domain.Holds;
 
 namespace Admission.Application.Holds;
 
-/// <summary>
-/// Hold as returned by every hold endpoint. Contains all contract fields
-/// (<c>holdId, classId, className, studentId, status, expiresAt</c>) plus extra detail.
-/// </summary>
 public sealed record HoldResponse(
     Guid HoldId,
     Guid ClassId,

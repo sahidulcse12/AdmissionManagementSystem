@@ -45,5 +45,4 @@ app.MapHoldEndpoints();
 
 app.Run();
 
-/// <summary>Exposed for WebApplicationFactory in integration tests.</summary>
 public partial class Program;

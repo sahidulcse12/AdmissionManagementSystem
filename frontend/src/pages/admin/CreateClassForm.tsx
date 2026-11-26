@@ -5,7 +5,6 @@ import { Alert } from '../../components/ui'
 
 const MAX_SEATS = 10000
 
-/** Each shift is created as its own class, e.g. "Class 6 - Morning Shift". */
 export function CreateClassForm({ onCreated }: { onCreated: (cls: SchoolClass) => void }) {
   const [name, setName] = useState('')
   const [totalSeats, setTotalSeats] = useState('120')
