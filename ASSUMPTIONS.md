@@ -1,7 +1,5 @@
 # Assumptions
 
-> Bangla version: [ASSUMPTIONS.bn.md](ASSUMPTIONS.bn.md)
-
 What I assumed where the brief was not explicit, and why.
 
 ## Classes and shifts

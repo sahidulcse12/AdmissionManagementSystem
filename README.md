@@ -1,7 +1,5 @@
 # School Admission Management System
 
-> বাংলা: [README.bn.md](README.bn.md)
-
 A first-come-first-served school admission system. Parents apply for a seat in a class, the seat is
 held for a limited time (10 minutes by default), and paying the admission fee confirms the admission.
 Admins create classes with a number of seats and watch them fill up. The system never admits more
@@ -209,12 +207,12 @@ History and commit hashes: [PROGRESS.md](PROGRESS.md).
 
 ## Documentation
 
-| Topic | English | বাংলা |
-|---|---|---|
-| Overview (this file) | [README.md](README.md) | [README.bn.md](README.bn.md) |
-| Architecture, database, concurrency | [ARCHITECTURE.md](ARCHITECTURE.md) | [ARCHITECTURE.bn.md](ARCHITECTURE.bn.md) |
-| API reference | [API.md](API.md) | [API.bn.md](API.bn.md) |
-| Implementation plan | [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) | [IMPLEMENTATION_PLAN.bn.md](IMPLEMENTATION_PLAN.bn.md) |
-| Progress, commits, test results | [PROGRESS.md](PROGRESS.md) | [PROGRESS.bn.md](PROGRESS.bn.md) |
-| Assumptions | [ASSUMPTIONS.md](ASSUMPTIONS.md) | [ASSUMPTIONS.bn.md](ASSUMPTIONS.bn.md) |
-| AI usage | [AI_USAGE.md](AI_USAGE.md) | [AI_USAGE.bn.md](AI_USAGE.bn.md) |
+| Topic | Document |
+|---|---|
+| Overview (this file) | [README.md](README.md) |
+| Architecture, database, concurrency | [ARCHITECTURE.md](ARCHITECTURE.md) |
+| API reference | [API.md](API.md) |
+| Implementation plan | [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) |
+| Progress, requirement checklist, test results | [PROGRESS.md](PROGRESS.md) |
+| Assumptions | [ASSUMPTIONS.md](ASSUMPTIONS.md) |
+| AI usage | [AI_USAGE.md](AI_USAGE.md) |
