@@ -6,7 +6,6 @@ public static class SwaggerSetup
 {
     public static IServiceCollection AddAdmissionSwagger(this IServiceCollection services)
     {
-        services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(o =>
         {
             o.SwaggerDoc("v1", new OpenApiInfo
