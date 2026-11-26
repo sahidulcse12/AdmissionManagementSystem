@@ -1,5 +1,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
+COPY src/Admission.Domain/Admission.Domain.csproj src/Admission.Domain/
+COPY src/Admission.Application/Admission.Application.csproj src/Admission.Application/
+COPY src/Admission.Infrastructure/Admission.Infrastructure.csproj src/Admission.Infrastructure/
 COPY src/Admission.Api/Admission.Api.csproj src/Admission.Api/
 RUN dotnet restore src/Admission.Api/Admission.Api.csproj
 COPY src/ src/
