@@ -6,6 +6,26 @@ Base URL: `http://localhost:8080`. All requests and responses are JSON. Timestam
 Responses contain every field required by the assignment contract; a few extra fields are added
 (allowed by the contract) to help the UI.
 
+**Interactive docs (Swagger):** http://localhost:8080/swagger — try every endpoint from the browser.
+OpenAPI document: http://localhost:8080/swagger/v1/swagger.json.
+
+## API versioning
+
+The API is versioned without changing any path, so the contract URLs below stay exactly as specified.
+
+| How to choose a version | Example |
+|---|---|
+| Header | `X-Api-Version: 1.0` |
+| Query string | `GET /classes?api-version=1.0` |
+| Nothing | Version `1.0` is assumed |
+
+- Every response carries `api-supported-versions: 1.0`.
+- An unsupported version (e.g. `X-Api-Version: 9.0`) returns `400` with an "Unsupported API version"
+  problem response.
+- *Why not `/v1/classes`?* The assignment's automated tests call the exact paths `/classes`,
+  `/holds/{holdId}`, … — a path prefix would break them. A future `2.0` can be added side by side and
+  selected with the same header/query.
+
 ## Conventions
 
 **Each shift is its own class.** "Class 6 - Morning Shift" and "Class 6 - Day Shift" are two classes,

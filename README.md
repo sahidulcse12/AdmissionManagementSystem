@@ -48,6 +48,7 @@ docker compose up --build
 | Parent / guardian UI | http://localhost:5173 |
 | Admin UI | http://localhost:5173/#/admin |
 | Backend API | http://localhost:8080 |
+| **Swagger UI** (try the API in the browser) | http://localhost:8080/swagger |
 | Health check | http://localhost:8080/health |
 
 The first build downloads base images and can take several minutes. Database migrations run
@@ -82,7 +83,7 @@ Docker's `api` container already listens on port 8080, so a backend started from
 
 ```bash
 docker compose stop api api2 web     # free ports 8080/8081/5173, keep PostgreSQL running
-cd backend && dotnet run --project src/Admission.Api        # http://localhost:8080
+cd backend && dotnet run --project src/Admission.Api        # http://localhost:8080/swagger (F5 in Visual Studio opens it)
 cd frontend && npm run dev                                  # http://localhost:5173
 ```
 
@@ -135,7 +136,11 @@ Details, diagrams and the full scenario table: [ARCHITECTURE.md](ARCHITECTURE.md
 | `GET` | `/me/holds` | All applications of this student |
 | `GET` | `/classes/{classId}/holds` | Extra: admin list of a class's applications |
 
-Request/response formats and every error code: [API.md](API.md).
+Request/response formats and every error code: [API.md](API.md). Interactive docs: **http://localhost:8080/swagger**.
+
+**API versioning:** paths are unversioned (as the contract requires). Send `X-Api-Version: 1.0` or
+`?api-version=1.0` to pick a version; without it, `1.0` is used. Responses include
+`api-supported-versions`; an unsupported version returns `400`. Details in [API.md](API.md#api-versioning).
 
 ## Running tests
 
@@ -143,7 +148,7 @@ Backend tests start a throwaway PostgreSQL container, so Docker must be running.
 
 ```bash
 cd backend
-dotnet test                       # 63 tests: contract, domain rules, expiry, races, two instances
+dotnet test                       # 68 tests: contract, domain rules, expiry, races, two instances, versioning, Swagger
 ```
 
 The concurrency tests are `ConcurrencyTests` (e.g. 50 students racing for 5 seats → exactly 5 holds),
