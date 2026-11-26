@@ -69,3 +69,5 @@ Brief-এ যা স্পষ্ট বলা নেই, সেখানে ক�
 ২০. **শিক্ষার্থী আইডি `localStorage`-এ মনে রাখা হয়**; চলমান আবেদন সবসময় `GET /me/holds` থেকে আবার পড়া হয়,
     তাই রিফ্রেশ বা ব্রাউজার রিস্টার্টের পরেও backend-ই আসল তথ্যের উৎস।
 ২১. **UI-এর লেখা ইংরেজিতে, সাথে brief-এর বাংলা শব্দ** ("আবেদন করুন", "ভর্তি ফি দিন", "বাতিল")।
+২২. **API versioning header বা query string দিয়ে, URL path দিয়ে নয়** (`X-Api-Version` / `?api-version=`, ডিফল্ট `1.0`)। *কারণ:* contract-এর path হুবহু `/classes`, `/holds/{holdId}` … রাখতে হবে; `/v1/` prefix দিলে পর্যালোচকদের automated test ভেঙে যেত।
+২৩. **Swagger UI সব পরিবেশে চালু** (`/swagger`, Docker-এও), যাতে Postman ছাড়াই API দেখা যায়।

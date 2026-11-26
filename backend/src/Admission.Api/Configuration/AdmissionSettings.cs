@@ -1,8 +1,5 @@
 namespace Admission.Api.Configuration;
 
-/// <summary>
-/// Runtime settings read from environment variables (see .env.example).
-/// </summary>
 public sealed class AdmissionSettings
 {
     public const int DefaultHoldDurationSeconds = 600;

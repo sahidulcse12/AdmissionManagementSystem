@@ -2,7 +2,6 @@ using Admission.Application.Abstractions;
 
 namespace Admission.Application.Classes;
 
-/// <summary>Request body of <c>POST /classes</c>: <c>{ "name": "...", "totalSeats": 120 }</c>.</summary>
 public sealed record CreateClassRequest(string? Name, int? TotalSeats);
 
 public sealed record ClassResponse(

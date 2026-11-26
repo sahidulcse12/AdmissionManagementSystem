@@ -7,13 +7,11 @@ import { formatCountdown } from '../../utils/format'
 
 interface Props {
   hold: Hold
-  /** Browser time (ms) when `hold` was fetched; anchors the countdown. */
   receivedAt: number
   studentId: string
   onChanged: (message?: string) => void
 }
 
-/** A HELD seat with a live countdown and the confirm / cancel actions. */
 export function ActiveHoldCard({ hold, receivedAt, studentId, onChanged }: Props) {
   const left = useCountdown(hold.remainingSeconds, receivedAt)
   const [busy, setBusy] = useState<'confirm' | 'cancel'>()

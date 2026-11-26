@@ -26,6 +26,9 @@
 | 6 | `feature/frontend-parent` | Parent screens, countdown, history, persistence, tests |
 | 7 | `feature/testing-and-documentation` | Docker end-to-end verification, English and Bangla docs |
 | 8 | `feature/api-contract-alignment` | Exact API contract (`totalSeats`, `holdId`, `204`), each shift as a class, student ID box at the top, two-backend bonus, `ContractTests`, `MultiInstanceTests` |
+| — | `fix/sweeper-graceful-shutdown` | Expiry sweeper stops quietly on shutdown; README explains running locally next to Docker |
+| — | `chore/remove-doc-comments` | Removed XML doc / JSDoc comments |
+| 9 | `feature/swagger-and-api-versioning` | Swagger UI at `/swagger`, API versioning by header/query (default 1.0), tests |
 
 ## Requirement checklist (brief §1.3–§1.7)
 
@@ -49,14 +52,15 @@
 | Readable errors (no seats, expired, bad input, server down) | ✅ | Frontend tests |
 | Bonus: two backend processes on one database | ✅ | `MultiInstanceTests`, `docker compose --profile multi` |
 | Bonus: frontend automated tests | ✅ | 21 Vitest tests |
+| Extra: Swagger UI and API versioning | ✅ | `/swagger`, `ApiVersioningAndSwaggerTests` |
 | README, ASSUMPTIONS, AI_USAGE, Dockerfiles, compose | ✅ | Repository root |
-| ≥ 3 backend tests incl. a concurrency test | ✅ | 63 tests |
+| ≥ 3 backend tests incl. a concurrency test | ✅ | 68 tests |
 
 ## Tests executed (latest)
 
 | Command | Result |
 |---|---|
-| `dotnet test` (Testcontainers PostgreSQL 16) | 63 passed, 0 failed |
+| `dotnet test` (Testcontainers PostgreSQL 16) | 68 passed, 0 failed |
 | Concurrency + multi-instance tests repeated 3× | 10/10 passed each run |
 | `npm test` | 21 passed |
 | `npm run lint` / `npm run build` | clean / OK |

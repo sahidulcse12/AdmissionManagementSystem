@@ -4,10 +4,6 @@ import { usePolling } from '../../hooks/usePolling'
 import { AvailableClasses } from './AvailableClasses'
 import { StudentDashboard } from './StudentDashboard'
 
-/**
- * Parent / guardian page. Classes are visible to everyone; applying needs the student ID
- * entered in the box at the top of the page.
- */
 export function ParentPage({ studentId }: { studentId: string | undefined }) {
   // `key` resets all dashboard state when the student changes.
   if (studentId) return <StudentDashboard key={studentId} studentId={studentId} />

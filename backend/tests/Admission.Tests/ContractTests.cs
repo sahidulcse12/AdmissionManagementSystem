@@ -4,7 +4,6 @@ using Admission.Tests.Infrastructure;
 
 namespace Admission.Tests;
 
-/// <summary>Checks the exact JSON field names and status codes required by the assignment contract.</summary>
 [Collection(ApiCollection.Name)]
 public sealed class ContractTests(ApiFactory factory)
 {

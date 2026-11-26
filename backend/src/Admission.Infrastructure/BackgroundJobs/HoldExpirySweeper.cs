@@ -6,11 +6,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Admission.Infrastructure.BackgroundJobs;
 
-/// <summary>
-/// Periodically persists EXPIRED for overdue holds. Correctness does not depend on this job:
-/// seat counts and hold status already treat overdue HELD holds as expired. The sweeper keeps the
-/// stored status accurate for reporting and frees the per-student unique slot promptly.
-/// </summary>
 internal sealed class HoldExpirySweeper(
     IServiceScopeFactory scopes,
     HoldOptions options,

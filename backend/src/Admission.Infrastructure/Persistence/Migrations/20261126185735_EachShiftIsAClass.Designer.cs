@@ -15,7 +15,6 @@ namespace Admission.Infrastructure.Persistence.Migrations
     [Migration("20261126185735_EachShiftIsAClass")]
     partial class EachShiftIsAClass
     {
-        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

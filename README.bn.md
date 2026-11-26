@@ -45,6 +45,7 @@ docker compose up --build
 | অভিভাবক UI | http://localhost:5173 |
 | অ্যাডমিন UI | http://localhost:5173/#/admin |
 | ব্যাকএন্ড API | http://localhost:8080 |
+| **Swagger UI** (ব্রাউজারে API চালিয়ে দেখুন) | http://localhost:8080/swagger |
 | Health check | http://localhost:8080/health |
 
 প্রথমবার build-এ base image ডাউনলোড হয় বলে কয়েক মিনিট লাগতে পারে। API চালু হওয়ার সময় ডাটাবেস migration
@@ -79,7 +80,7 @@ Docker-এর `api` container আগে থেকেই 8080 পোর্টে 
 
 ```bash
 docker compose stop api api2 web     # 8080/8081/5173 পোর্ট খালি করে, PostgreSQL চালু থাকে
-cd backend && dotnet run --project src/Admission.Api        # http://localhost:8080
+cd backend && dotnet run --project src/Admission.Api        # http://localhost:8080/swagger (Visual Studio-তে F5 দিলে খুলে যায়)
 cd frontend && npm run dev                                  # http://localhost:5173
 ```
 
@@ -131,7 +132,9 @@ API তার connection string `DATABASE_URL` (Npgsql ফরম্যাট) �
 | `GET` | `/me/holds` | এই শিক্ষার্থীর সব আবেদন |
 | `GET` | `/classes/{classId}/holds` | বাড়তি: অ্যাডমিনের জন্য একটি class-এর আবেদনের তালিকা |
 
-Request/response ফরম্যাট ও সব error code: [API.bn.md](API.bn.md)।
+Request/response ফরম্যাট ও সব error code: [API.bn.md](API.bn.md)। ইন্টারঅ্যাকটিভ ডকুমেন্ট: **http://localhost:8080/swagger**।
+
+**API versioning:** contract অনুযায়ী path-এ version নেই। Version বেছে নিতে `X-Api-Version: 1.0` header বা `?api-version=1.0` দিন; না দিলে `1.0` ধরা হয়। Response-এ `api-supported-versions` থাকে; অসমর্থিত version দিলে `400`। বিস্তারিত [API.bn.md](API.bn.md)-এ।
 
 ## টেস্ট চালানো
 
@@ -139,7 +142,7 @@ Request/response ফরম্যাট ও সব error code: [API.bn.md](API.bn
 
 ```bash
 cd backend
-dotnet test                       # ৬৩টি টেস্ট: contract, domain নিয়ম, মেয়াদ, race, দুই instance
+dotnet test                       # ৬৮টি টেস্ট: contract, domain নিয়ম, মেয়াদ, race, দুই instance, versioning, Swagger
 ```
 
 Concurrency টেস্টগুলো হলো `ConcurrencyTests` (যেমন ৫টি সিটের জন্য ৫০ জন একসাথে → ঠিক ৫টি hold),

@@ -2,7 +2,6 @@ using Admission.Domain.Common;
 
 namespace Admission.Domain.Holds;
 
-/// <summary>A temporary reservation of one seat in a class for one student.</summary>
 public sealed class Hold
 {
     private Hold() { } // EF Core
@@ -26,24 +25,14 @@ public sealed class Hold
         ExpiresAt = now + duration,
     };
 
-    /// <summary>
-    /// Status as of <paramref name="now"/>. A HELD hold past its deadline is reported as EXPIRED
-    /// even before the background sweeper has persisted that change.
-    /// </summary>
     public HoldStatus StatusAt(DateTimeOffset now) =>
         Status == HoldStatus.HELD && ExpiresAt <= now ? HoldStatus.EXPIRED : Status;
 
-    /// <summary>True when the hold occupies a seat at <paramref name="now"/>.</summary>
     public bool OccupiesSeatAt(DateTimeOffset now) =>
         StatusAt(now) is HoldStatus.HELD or HoldStatus.CONFIRMED;
 
     public bool IsOwnedBy(string studentId) => StudentId == studentId;
 
-    /// <summary>
-    /// Confirms admission (payment is assumed successful). Idempotent: confirming an already
-    /// confirmed hold changes nothing and returns <c>false</c>.
-    /// </summary>
-    /// <returns><c>true</c> when the state changed.</returns>
     public bool Confirm(DateTimeOffset now)
     {
         switch (StatusAt(now))
@@ -63,11 +52,6 @@ public sealed class Hold
         }
     }
 
-    /// <summary>
-    /// Releases the seat. Idempotent: cancelling an already cancelled hold returns <c>false</c>.
-    /// A confirmed admission cannot be cancelled through this flow.
-    /// </summary>
-    /// <returns><c>true</c> when the state changed.</returns>
     public bool Cancel(DateTimeOffset now)
     {
         switch (StatusAt(now))

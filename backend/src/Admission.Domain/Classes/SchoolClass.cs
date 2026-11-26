@@ -2,10 +2,6 @@ using Admission.Domain.Common;
 
 namespace Admission.Domain.Classes;
 
-/// <summary>
-/// An admission unit with a fixed number of seats. Each shift is its own class,
-/// e.g. "Class 6 - Morning Shift" and "Class 6 - Day Shift".
-/// </summary>
 public sealed class SchoolClass
 {
     public const int NameMaxLength = 100;
@@ -17,7 +13,6 @@ public sealed class SchoolClass
     public Guid Id { get; private set; }
     public string Name { get; private set; } = string.Empty;
 
-    /// <summary>Upper-cased name used for case-insensitive uniqueness.</summary>
     public string NormalizedName { get; private set; } = string.Empty;
 
     public int TotalSeats { get; private set; }

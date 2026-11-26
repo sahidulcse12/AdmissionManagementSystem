@@ -26,7 +26,6 @@ internal sealed class ClassRepository(AdmissionDbContext db) : IClassRepository
     public async Task<IReadOnlyList<ClassWithUsage>> ListWithUsageAsync(DateTimeOffset now, CancellationToken ct) =>
         await WithUsage(db.Classes.OrderBy(c => c.Name), now).ToListAsync(ct);
 
-    /// <summary>Seat usage is always computed from the holds table, never cached.</summary>
     private IQueryable<ClassWithUsage> WithUsage(IQueryable<SchoolClass> query, DateTimeOffset now) =>
         query.AsNoTracking().Select(c => new ClassWithUsage(
             c,

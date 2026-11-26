@@ -1,7 +1,6 @@
 import { API_URL } from '../config'
 import type { CreateClassInput, Hold, SchoolClass } from './types'
 
-/** Error returned by the API: `{ error: { code, message } }`, or a network failure. */
 export class ApiError extends Error {
   readonly status: number
   readonly code: string
@@ -56,7 +55,6 @@ export const api = {
   getHold: (holdId: string, studentId: string) => request<Hold>(`/holds/${holdId}`, {}, studentId),
   confirmHold: (holdId: string, studentId: string) =>
     request<Hold>(`/holds/${holdId}/confirm`, { method: 'POST' }, studentId),
-  /** Succeeds with 204 No Content. */
   cancelHold: (holdId: string, studentId: string) =>
     request<void>(`/holds/${holdId}`, { method: 'DELETE' }, studentId),
   myHolds: (studentId: string) => request<Hold[]>('/me/holds', {}, studentId),

@@ -6,6 +6,24 @@ Base URL: `http://localhost:8080`। সব request ও response JSON। সম�
 Assignment contract-এর প্রতিটি field response-এ আছে; UI-এর সুবিধার জন্য কয়েকটি বাড়তি field যোগ করা হয়েছে
 (contract অনুযায়ী এটি অনুমোদিত)।
 
+**ইন্টারঅ্যাকটিভ ডকুমেন্ট (Swagger):** http://localhost:8080/swagger — ব্রাউজার থেকেই প্রতিটি endpoint চালিয়ে দেখা যায়।
+OpenAPI ডকুমেন্ট: http://localhost:8080/swagger/v1/swagger.json।
+
+## API versioning
+
+কোনো path না বদলেই API-তে version আছে, তাই নিচের contract-এর URL হুবহু আগের মতোই থাকে।
+
+| Version বেছে নেওয়ার উপায় | উদাহরণ |
+|---|---|
+| Header | `X-Api-Version: 1.0` |
+| Query string | `GET /classes?api-version=1.0` |
+| কিছু না দিলে | Version `1.0` ধরা হয় |
+
+- প্রতিটি response-এ `api-supported-versions: 1.0` header থাকে।
+- অসমর্থিত version (যেমন `X-Api-Version: 9.0`) দিলে "Unsupported API version" বার্তাসহ `400` আসে।
+- *`/v1/classes` কেন নয়?* Assignment-এর automated test হুবহু `/classes`, `/holds/{holdId}` … path কল করে —
+  path-এ prefix দিলে সেগুলো ভেঙে যেত। ভবিষ্যতে `2.0` পাশাপাশি যোগ করে একই header/query দিয়ে বেছে নেওয়া যাবে।
+
 ## নিয়মাবলি
 
 **প্রতিটি shift একটি আলাদা class।** "Class 6 - Morning Shift" আর "Class 6 - Day Shift" দুটি আলাদা class,

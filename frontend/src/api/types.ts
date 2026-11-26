@@ -1,6 +1,5 @@
 export type HoldStatus = 'HELD' | 'CONFIRMED' | 'EXPIRED' | 'CANCELLED'
 
-/** A class. Each shift is its own class, e.g. "Class 6 - Morning Shift". */
 export interface SchoolClass {
   id: string
   name: string

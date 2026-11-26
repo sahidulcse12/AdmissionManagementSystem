@@ -4,7 +4,6 @@ using Admission.Domain.Students;
 
 namespace Admission.Tests.Domain;
 
-/// <summary>Pure unit tests of the hold state machine (no database).</summary>
 public sealed class HoldTests
 {
     private static readonly DateTimeOffset T0 = new(2026, 1, 1, 9, 0, 0, TimeSpan.Zero);
