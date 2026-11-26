@@ -5,7 +5,6 @@ namespace Admission.Api.Endpoints;
 
 public static class HoldEndpoints
 {
-    /// <summary>Header carrying the student's birth registration number (no auth system).</summary>
     public const string StudentHeader = "X-Student-Id";
 
     public static void MapHoldEndpoints(this IEndpointRouteBuilder app)

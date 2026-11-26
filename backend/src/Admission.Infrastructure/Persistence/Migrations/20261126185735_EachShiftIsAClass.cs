@@ -4,10 +4,8 @@
 
 namespace Admission.Infrastructure.Persistence.Migrations
 {
-    /// <inheritdoc />
     public partial class EachShiftIsAClass : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropIndex(
@@ -47,7 +45,6 @@ namespace Admission.Infrastructure.Persistence.Migrations
                 sql: "total_seats > 0");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropIndex(

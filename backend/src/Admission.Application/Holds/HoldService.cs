@@ -6,7 +6,6 @@ using Admission.Domain.Students;
 
 namespace Admission.Application.Holds;
 
-/// <summary>Use cases for reserving seats (holds) and reading them.</summary>
 public sealed class HoldService(
     IClassRepository classes,
     IHoldRepository holds,
@@ -14,11 +13,6 @@ public sealed class HoldService(
     HoldOptions options,
     TimeProvider clock)
 {
-    /// <summary>
-    /// Reserves one seat for the student, first-come-first-served.
-    /// The class row is locked for the whole transaction, so concurrent requests for the same
-    /// class are processed one at a time in arrival order and can never exceed capacity.
-    /// </summary>
     public Task<HoldResponse> PlaceAsync(Guid classId, string? rawStudentId, CancellationToken ct)
     {
         var studentId = StudentId.Parse(rawStudentId);
@@ -54,15 +48,9 @@ public sealed class HoldService(
         }, ct);
     }
 
-    /// <summary>
-    /// Confirms admission. The hold row is locked for the transaction, so concurrent confirmations
-    /// are serialised: the first one confirms, later ones see CONFIRMED and return the same result.
-    /// Expiry is evaluated after the lock is acquired, so a hold cannot expire mid-confirmation.
-    /// </summary>
     public Task<HoldResponse> ConfirmAsync(Guid holdId, string? rawStudentId, CancellationToken ct) =>
         TransitionAsync(holdId, rawStudentId, (hold, now) => hold.Confirm(now), ct);
 
-    /// <summary>Cancels a HELD hold and releases its seat. Repeating the call is harmless.</summary>
     public Task<HoldResponse> CancelAsync(Guid holdId, string? rawStudentId, CancellationToken ct) =>
         TransitionAsync(holdId, rawStudentId, (hold, now) => hold.Cancel(now), ct);
 
@@ -84,10 +72,6 @@ public sealed class HoldService(
         }, ct);
     }
 
-    /// <summary>
-    /// Reads a hold's current status. The contract does not require <c>X-Student-Id</c> here, so a
-    /// request without it is answered; when the header is present it must belong to the owner.
-    /// </summary>
     public async Task<HoldResponse> GetAsync(Guid holdId, string? rawStudentId, CancellationToken ct)
     {
         var studentId = string.IsNullOrWhiteSpace(rawStudentId) ? null : StudentId.Parse(rawStudentId);
@@ -103,7 +87,6 @@ public sealed class HoldService(
         return (await holds.ListByStudentAsync(studentId, ct)).Select(h => HoldResponse.From(h, now)).ToList();
     }
 
-    /// <summary>Admin view: every hold/admission for one class.</summary>
     public async Task<IReadOnlyList<HoldResponse>> ListForClassAsync(Guid classId, CancellationToken ct)
     {
         _ = await classes.GetAsync(classId, ct) ?? throw ClassService.NotFound();

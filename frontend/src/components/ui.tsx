@@ -28,7 +28,6 @@ export function StatusBadge({ status }: { status: HoldStatus }) {
   return <span className={`badge badge-${status.toLowerCase()}`}>{STATUS_LABEL[status]}</span>
 }
 
-/** Stacked bar: confirmed | held | available. */
 export function SeatBar({ cls }: { cls: SchoolClass }) {
   const pct = (n: number) => `${(n / cls.totalSeats) * 100}%`
   return (

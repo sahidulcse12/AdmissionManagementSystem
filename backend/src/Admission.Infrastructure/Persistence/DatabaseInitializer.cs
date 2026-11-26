@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Admission.Infrastructure.Persistence;
 
-/// <summary>Applies pending EF Core migrations at startup, retrying while the database starts.</summary>
 public static class DatabaseInitializer
 {
     public static async Task MigrateAsync(IServiceProvider services, ILogger logger, CancellationToken ct = default)

@@ -11,7 +11,6 @@ function outcomeTime(h: Hold): string {
   }
 }
 
-/** "My applications": every application of this student and its status. */
 export function HistoryTable({ holds }: { holds: Hold[] }) {
   if (!holds.length) return <Empty>No applications yet.</Empty>
   return (

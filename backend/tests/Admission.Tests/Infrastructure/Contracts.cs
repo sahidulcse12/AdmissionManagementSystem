@@ -24,6 +24,5 @@ public sealed record HoldDto(
     int RemainingSeconds,
     DateTimeOffset ServerTime)
 {
-    /// <summary>Shorthand used throughout the tests; the wire field is <c>holdId</c>.</summary>
     public Guid Id => HoldId;
 }

@@ -4,7 +4,6 @@ using Admission.Domain.Classes;
 
 namespace Admission.Application.Classes;
 
-/// <summary>Use cases for creating and reading classes.</summary>
 public sealed class ClassService(IClassRepository classes, IUnitOfWork unitOfWork, TimeProvider clock)
 {
     public async Task<ClassResponse> CreateAsync(CreateClassRequest request, CancellationToken ct)

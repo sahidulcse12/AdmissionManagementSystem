@@ -9,10 +9,6 @@ export interface MockCall {
 
 type Handler = (call: MockCall) => { status?: number; body?: unknown } | undefined
 
-/**
- * Replaces global fetch with a router over `handlers` (first match wins) and records calls.
- * Unmatched requests fail the test loudly.
- */
 export function mockFetch(handlers: Handler[]) {
   const calls: MockCall[] = []
   const fn = vi.fn(async (input: RequestInfo | URL, init: RequestInit = {}) => {

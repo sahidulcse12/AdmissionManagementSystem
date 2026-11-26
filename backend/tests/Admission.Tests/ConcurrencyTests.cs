@@ -3,10 +3,6 @@ using Admission.Tests.Infrastructure;
 
 namespace Admission.Tests;
 
-/// <summary>
-/// Fires many requests at the same moment against a real PostgreSQL database
-/// to prove that capacity and uniqueness hold under contention.
-/// </summary>
 [Collection(ApiCollection.Name)]
 public sealed class ConcurrencyTests(ApiFactory factory)
 {
@@ -80,7 +76,6 @@ public sealed class ConcurrencyTests(ApiFactory factory)
         }
     }
 
-    /// <summary>Starts all requests together behind a barrier so they truly overlap.</summary>
     internal static async Task<HttpResponseMessage[]> RaceAsync(int count, Func<int, Task<HttpResponseMessage>> send)
     {
         using var gate = new SemaphoreSlim(0);

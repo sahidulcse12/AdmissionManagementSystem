@@ -6,7 +6,6 @@ interface Props {
   onChange: (studentId: string | undefined) => void
 }
 
-/** Box at the top of every page for the student's 17-digit birth registration number. */
 export function StudentIdBar({ studentId, onChange }: Props) {
   const [value, setValue] = useState('')
   const [error, setError] = useState<string>()
