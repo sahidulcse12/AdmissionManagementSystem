@@ -37,13 +37,16 @@ internal sealed class HoldRepository(AdmissionDbContext db) : IHoldRepository
             (h.Status == HoldStatus.CONFIRMED || (h.Status == HoldStatus.HELD && h.ExpiresAt > now)), ct);
 
     public async Task<IReadOnlyList<HoldWithClass>> ListByStudentAsync(string studentId, CancellationToken ct) =>
-        await WithClass(db.Holds.Where(h => h.StudentId == studentId))
-            .OrderByDescending(x => x.Hold.CreatedAt).ToListAsync(ct);
+        await WithClass(db.Holds.Where(h => h.StudentId == studentId), newestFirst: true).ToListAsync(ct);
 
     public async Task<IReadOnlyList<HoldWithClass>> ListByClassAsync(Guid classId, CancellationToken ct) =>
-        await WithClass(db.Holds.Where(h => h.ClassId == classId))
-            .OrderByDescending(x => x.Hold.CreatedAt).ToListAsync(ct);
+        await WithClass(db.Holds.Where(h => h.ClassId == classId), newestFirst: true).ToListAsync(ct);
 
-    private IQueryable<HoldWithClass> WithClass(IQueryable<Hold> holds) =>
-        holds.AsNoTracking().Join(db.Classes.AsNoTracking(), h => h.ClassId, c => c.Id, (h, c) => new HoldWithClass(h, c));
+    private IQueryable<HoldWithClass> WithClass(IQueryable<Hold> holds, bool newestFirst = false)
+    {
+        var joined = holds.AsNoTracking()
+            .Join(db.Classes.AsNoTracking(), h => h.ClassId, c => c.Id, (h, c) => new { Hold = h, Class = c });
+        if (newestFirst) joined = joined.OrderByDescending(x => x.Hold.CreatedAt).ThenBy(x => x.Hold.Id);
+        return joined.Select(x => new HoldWithClass(x.Hold, x.Class));
+    }
 }
