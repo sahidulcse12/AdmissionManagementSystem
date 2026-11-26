@@ -65,6 +65,7 @@ public sealed class ClassApiTests(ApiFactory factory)
             new StringContent(body, System.Text.Encoding.UTF8, "application/json"));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("INVALID_REQUEST", await response.ErrorCodeAsync());
     }
 
     [Fact]

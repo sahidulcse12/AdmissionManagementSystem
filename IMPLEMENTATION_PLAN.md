@@ -12,7 +12,7 @@ The system must never allocate more seats than a class's totalSeats, even under 
 
 | Layer | Choice |
 |---|---|
-| Backend | C# / .NET 9, ASP.NET Core Minimal APIs, EF Core 9 + Npgsql |
+| Backend | C# / .NET 9, ASP.NET Core Web API (controllers), EF Core 9 + Npgsql |
 | Database | PostgreSQL 16 |
 | Frontend | React 19 + TypeScript + Vite, Vitest + Testing Library |
 | Infrastructure | Docker Compose (db, api, web), named volume `pgdata` |
