@@ -42,7 +42,7 @@ Dependencies point inward only: `Api → Infrastructure → Application → Doma
 | Domain | `SchoolClass`, `Hold`, `HoldStatus`, `StudentId`, `DomainException` | Invariants (totalSeats 1–10000, 17-digit student id) and the hold state machine (`Confirm`, `Cancel`, `StatusAt`). |
 | Application | `ClassService`, `HoldService`, `IClassRepository`, `IHoldRepository`, `IUnitOfWork` | Orchestrates a use case inside a transaction; never touches SQL. |
 | Infrastructure | `AdmissionDbContext`, `ClassRepository`, `HoldRepository`, `UnitOfWork`, `HoldExpirySweeper` | Row locks, seat counting queries, constraint mapping, migrations at startup. |
-| Api | `ClassEndpoints`, `HoldEndpoints`, `ErrorHandlingMiddleware` | Maps HTTP ↔ use cases and exceptions ↔ status codes. |
+| Api | `ClassEndpoints`, `HoldEndpoints`, `ErrorHandlingMiddleware`, `SwaggerSetup`, `ApiVersioningSetup` | Maps HTTP ↔ use cases and exceptions ↔ status codes; Swagger UI at `/swagger`; API versioning by `X-Api-Version` header or `?api-version=` (default 1.0). |
 
 ## Database design
 

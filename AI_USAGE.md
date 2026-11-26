@@ -15,7 +15,7 @@
 | Backend | Wrote Domain / Application / Infrastructure / Api layers, EF Core config, migrations | Required Clean Architecture; reviewed the locking design |
 | Concurrency | Proposed per-class `SELECT … FOR UPDATE`, hold row locks, partial unique index | Reviewed and verified with race tests and real `curl` races |
 | Frontend | Wrote the React/TypeScript screens, API client, polling and countdown | Checked every screen against the brief |
-| Tests | Wrote 63 backend tests (incl. concurrency and two-instance tests) and 21 frontend tests | Ran them repeatedly, checked failures |
+| Tests | Wrote 68 backend tests (incl. concurrency and two-instance tests) and 21 frontend tests | Ran them repeatedly, checked failures |
 | Docker / docs | Wrote Dockerfiles, compose file, README and other docs | Verified `docker compose up`, persistence and expiry by hand |
 
 ## Where the AI was wrong, and how I caught it

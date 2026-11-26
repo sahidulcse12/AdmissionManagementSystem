@@ -72,3 +72,5 @@ exactly 7 holds) and manually with `docker compose --profile multi up` (API on 8
 20. **The student ID is remembered in `localStorage`**; running applications are always re-read from
     `GET /me/holds`, so the backend stays the source of truth after a refresh or browser restart.
 21. **UI labels are English with the brief's Bangla terms** ("আবেদন করুন", "ভর্তি ফি দিন", "বাতিল").
+22. **API versioning uses a header or query string, not the URL path** (`X-Api-Version` / `?api-version=`, default `1.0`). *Why:* the contract paths must stay exactly `/classes`, `/holds/{holdId}`, …; a `/v1/` prefix would break the reviewers' automated tests.
+23. **Swagger UI is enabled in every environment** (`/swagger`, also in Docker) so the API can be explored without Postman.

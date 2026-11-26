@@ -26,6 +26,9 @@
 | ৬ | `feature/frontend-parent` | অভিভাবক স্ক্রিন, countdown, ইতিহাস, তথ্য সংরক্ষণ, টেস্ট |
 | ৭ | `feature/testing-and-documentation` | Docker end-to-end যাচাই, ইংরেজি ও বাংলা ডকুমেন্ট |
 | ৮ | `feature/api-contract-alignment` | হুবহু API contract (`totalSeats`, `holdId`, `204`), প্রতিটি shift আলাদা class, উপরে শিক্ষার্থী আইডির ঘর, দুই-backend bonus, `ContractTests`, `MultiInstanceTests` |
+| — | `fix/sweeper-graceful-shutdown` | বন্ধের সময় expiry sweeper শান্তভাবে থামে; Docker-এর পাশাপাশি local-এ চালানোর নিয়ম README-তে |
+| — | `chore/remove-doc-comments` | XML doc / JSDoc কমেন্ট মোছা |
+| ৯ | `feature/swagger-and-api-versioning` | `/swagger`-এ Swagger UI, header/query দিয়ে API versioning (ডিফল্ট 1.0), টেস্ট |
 
 ## প্রয়োজনীয়তার তালিকা (brief §১.৩–§১.৭)
 
@@ -49,14 +52,15 @@
 | বোঝার মতো error (সিট শেষ, মেয়াদ শেষ, ভুল input, server বন্ধ) | ✅ | ফ্রন্টএন্ড টেস্ট |
 | Bonus: একই ডাটাবেসে দুটি backend process | ✅ | `MultiInstanceTests`, `docker compose --profile multi` |
 | Bonus: ফ্রন্টএন্ডের automated test | ✅ | ২১টি Vitest টেস্ট |
+| বাড়তি: Swagger UI ও API versioning | ✅ | `/swagger`, `ApiVersioningAndSwaggerTests` |
 | README, ASSUMPTIONS, AI_USAGE, Dockerfile, compose | ✅ | রিপোজিটরির root |
-| কমপক্ষে ৩টি ব্যাকএন্ড টেস্ট, একটি concurrency টেস্টসহ | ✅ | ৬৩টি টেস্ট |
+| কমপক্ষে ৩টি ব্যাকএন্ড টেস্ট, একটি concurrency টেস্টসহ | ✅ | ৬৮টি টেস্ট |
 
 ## চালানো টেস্ট (সর্বশেষ)
 
 | কমান্ড | ফলাফল |
 |---|---|
-| `dotnet test` (Testcontainers PostgreSQL 16) | ৬৩টি সফল, ০টি ব্যর্থ |
+| `dotnet test` (Testcontainers PostgreSQL 16) | ৬৮টি সফল, ০টি ব্যর্থ |
 | Concurrency + multi-instance টেস্ট ৩ বার | প্রতিবার ১০/১০ সফল |
 | `npm test` | ২১টি সফল |
 | `npm run lint` / `npm run build` | পরিষ্কার / সফল |
