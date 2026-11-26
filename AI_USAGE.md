@@ -1,7 +1,5 @@
 # AI Usage
 
-> Bangla version: [AI_USAGE.bn.md](AI_USAGE.bn.md)
-
 ## Tool and model
 
 - **Tool:** Claude Code (Anthropic's agentic coding assistant), used from the IDE.

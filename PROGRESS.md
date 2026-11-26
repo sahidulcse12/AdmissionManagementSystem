@@ -1,7 +1,5 @@
 # Progress
 
-> Bangla version: [PROGRESS.bn.md](PROGRESS.bn.md)
-
 ## Current status
 
 - **Phase:** Complete — all requirements of the brief implemented and verified; `develop` merged into `main`
@@ -30,6 +28,7 @@
 | — | `chore/remove-doc-comments` | Removed XML doc / JSDoc comments |
 | 9 | `feature/swagger-and-api-versioning` | Swagger UI at `/swagger`, API versioning by header/query (default 1.0), tests |
 | 10 | `feature/controllers` | HTTP layer moved to ASP.NET Core controllers (`ClassesController`, `ClassHoldsController`, `HoldsController`, `MeController`); contract unchanged |
+| — | `chore/remove-bangla-docs` | Removed the Bangla (`*.bn.md`) copies of the documentation; English docs remain |
 
 ## Requirement checklist (brief §1.3–§1.7)
 

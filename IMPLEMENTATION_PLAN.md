@@ -1,7 +1,5 @@
 # Implementation Plan
 
-> Bangla version: [IMPLEMENTATION_PLAN.bn.md](IMPLEMENTATION_PLAN.bn.md)
-
 ## Goal
 
 A School Admission Management System where parents reserve seats first-come-first-served,
