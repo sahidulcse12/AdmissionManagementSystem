@@ -28,10 +28,6 @@ namespace Admission.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<int>("Capacity")
-                        .HasColumnType("integer")
-                        .HasColumnName("capacity");
-
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -48,21 +44,19 @@ namespace Admission.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("normalized_name");
 
-                    b.Property<string>("Shift")
-                        .IsRequired()
-                        .HasMaxLength(16)
-                        .HasColumnType("character varying(16)")
-                        .HasColumnName("shift");
+                    b.Property<int>("TotalSeats")
+                        .HasColumnType("integer")
+                        .HasColumnName("total_seats");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("NormalizedName", "Shift")
+                    b.HasIndex("NormalizedName")
                         .IsUnique()
-                        .HasDatabaseName("ux_classes_normalized_name_shift");
+                        .HasDatabaseName("ux_classes_normalized_name");
 
                     b.ToTable("classes", null, t =>
                         {
-                            t.HasCheckConstraint("ck_classes_capacity_positive", "capacity > 0");
+                            t.HasCheckConstraint("ck_classes_total_seats_positive", "total_seats > 0");
                         });
                 });
 

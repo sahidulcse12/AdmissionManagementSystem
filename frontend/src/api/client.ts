@@ -56,8 +56,9 @@ export const api = {
   getHold: (holdId: string, studentId: string) => request<Hold>(`/holds/${holdId}`, {}, studentId),
   confirmHold: (holdId: string, studentId: string) =>
     request<Hold>(`/holds/${holdId}/confirm`, { method: 'POST' }, studentId),
+  /** Succeeds with 204 No Content. */
   cancelHold: (holdId: string, studentId: string) =>
-    request<Hold>(`/holds/${holdId}`, { method: 'DELETE' }, studentId),
+    request<void>(`/holds/${holdId}`, { method: 'DELETE' }, studentId),
   myHolds: (studentId: string) => request<Hold[]>('/me/holds', {}, studentId),
 }
 

@@ -5,9 +5,8 @@ export const STUDENT = '20150123456789012'
 export function makeClass(overrides: Partial<SchoolClass> = {}): SchoolClass {
   return {
     id: 'c1',
-    name: 'Class 1',
-    shift: 'MORNING',
-    capacity: 10,
+    name: 'Class 6 - Morning Shift',
+    totalSeats: 10,
     heldSeats: 2,
     confirmedSeats: 3,
     availableSeats: 5,
@@ -18,10 +17,9 @@ export function makeClass(overrides: Partial<SchoolClass> = {}): SchoolClass {
 
 export function makeHold(overrides: Partial<Hold> = {}): Hold {
   return {
-    id: 'h1',
+    holdId: 'h1',
     classId: 'c1',
-    className: 'Class 1',
-    shift: 'MORNING',
+    className: 'Class 6 - Morning Shift',
     studentId: STUDENT,
     status: 'HELD',
     createdAt: '2026-01-01T00:00:00Z',

@@ -9,7 +9,7 @@ public interface IClassRepository
 {
     void Add(SchoolClass schoolClass);
 
-    Task<bool> ExistsAsync(string normalizedName, Shift shift, CancellationToken ct);
+    Task<bool> ExistsAsync(string normalizedName, CancellationToken ct);
 
     Task<SchoolClass?> GetAsync(Guid id, CancellationToken ct);
 

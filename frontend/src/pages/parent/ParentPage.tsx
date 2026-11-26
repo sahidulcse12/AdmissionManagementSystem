@@ -1,23 +1,39 @@
-import { useState } from 'react'
-import { STUDENT_ID_KEY, STUDENT_ID_PATTERN, storage } from '../../utils/storage'
+import { api } from '../../api/client'
+import { Alert } from '../../components/ui'
+import { usePolling } from '../../hooks/usePolling'
+import { AvailableClasses } from './AvailableClasses'
 import { StudentDashboard } from './StudentDashboard'
-import { StudentIdForm } from './StudentIdForm'
 
-function initialStudentId(): string | undefined {
-  const saved = storage.get(STUDENT_ID_KEY)
-  return saved && STUDENT_ID_PATTERN.test(saved) ? saved : undefined
+/**
+ * Parent / guardian page. Classes are visible to everyone; applying needs the student ID
+ * entered in the box at the top of the page.
+ */
+export function ParentPage({ studentId }: { studentId: string | undefined }) {
+  // `key` resets all dashboard state when the student changes.
+  if (studentId) return <StudentDashboard key={studentId} studentId={studentId} />
+  return <ClassesOnly />
 }
 
-/** Remembers the student across refreshes and browser restarts; the dashboard re-reads all state from the API. */
-export function ParentPage() {
-  const [studentId, setStudentId] = useState(initialStudentId)
-
-  function choose(id: string | undefined) {
-    storage.set(STUDENT_ID_KEY, id ?? null)
-    setStudentId(id)
-  }
-
-  if (!studentId) return <StudentIdForm onSubmit={choose} />
-  // `key` resets all dashboard state when the student changes.
-  return <StudentDashboard key={studentId} studentId={studentId} onChangeStudent={() => choose(undefined)} />
+function ClassesOnly() {
+  const classes = usePolling(api.listClasses)
+  return (
+    <div className="stack">
+      <Alert kind="info">
+        Enter the student's 17-digit birth registration number at the top of the page to apply.
+        (আবেদন করতে উপরের ঘরে শিক্ষার্থীর জন্ম নিবন্ধন নম্বর লিখুন।)
+      </Alert>
+      <section className="card">
+        <h2>Classes (Class তালিকা)</h2>
+        {classes.error && <Alert kind="error">{classes.error}</Alert>}
+        <AvailableClasses
+          classes={classes.data}
+          loading={classes.loading}
+          blockedClassIds={new Set()}
+          reservingId={undefined}
+          disabled
+          onReserve={() => undefined}
+        />
+      </section>
+    </div>
+  )
 }

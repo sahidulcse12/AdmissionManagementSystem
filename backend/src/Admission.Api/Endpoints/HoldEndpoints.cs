@@ -17,7 +17,7 @@ public static class HoldEndpoints
             CancellationToken ct) =>
         {
             var hold = await service.PlaceAsync(RouteIds.Parse(classId, "class id"), studentId, ct);
-            return Results.Created($"/holds/{hold.Id}", hold);
+            return Results.Created($"/holds/{hold.HoldId}", hold);
         });
 
         app.MapGet("/classes/{classId}/holds", async (string classId, HoldService service, CancellationToken ct) =>
@@ -42,7 +42,10 @@ public static class HoldEndpoints
             [FromHeader(Name = StudentHeader)] string? studentId,
             HoldService service,
             CancellationToken ct) =>
-            Results.Ok(await service.CancelAsync(RouteIds.Parse(holdId, "hold id"), studentId, ct)));
+        {
+            await service.CancelAsync(RouteIds.Parse(holdId, "hold id"), studentId, ct);
+            return Results.NoContent();
+        });
 
         app.MapGet("/me/holds", async (
             [FromHeader(Name = StudentHeader)] string? studentId,

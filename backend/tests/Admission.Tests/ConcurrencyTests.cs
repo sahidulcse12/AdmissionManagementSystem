@@ -29,13 +29,13 @@ public sealed class ConcurrencyTests(ApiFactory factory)
     [Fact]
     public async Task Two_students_racing_for_the_last_seat_only_one_wins()
     {
-        var cls = await _client.CreateClassAsync(capacity: 2);
+        var cls = await _client.CreateClassAsync(seats: 2);
         await _client.PlaceHoldOkAsync(cls.Id, TestData.StudentId());
 
         for (var round = 0; round < 5; round++)
         {
             // Fresh class each round with exactly one seat left.
-            var c = await _client.CreateClassAsync(capacity: 2);
+            var c = await _client.CreateClassAsync(seats: 2);
             await _client.PlaceHoldOkAsync(c.Id, TestData.StudentId());
 
             var responses = await RaceAsync(2, _ => _client.PlaceHoldAsync(c.Id, TestData.StudentId()));
@@ -49,7 +49,7 @@ public sealed class ConcurrencyTests(ApiFactory factory)
     [Fact]
     public async Task Same_student_sending_parallel_holds_gets_exactly_one()
     {
-        var cls = await _client.CreateClassAsync(capacity: 10);
+        var cls = await _client.CreateClassAsync(seats: 10);
         var student = TestData.StudentId();
 
         var responses = await RaceAsync(20, _ => _client.PlaceHoldAsync(cls.Id, student));
@@ -65,9 +65,9 @@ public sealed class ConcurrencyTests(ApiFactory factory)
     {
         var classes = new[]
         {
-            await _client.CreateClassAsync(capacity: 1),
-            await _client.CreateClassAsync(capacity: 3),
-            await _client.CreateClassAsync(capacity: 7),
+            await _client.CreateClassAsync(seats: 1),
+            await _client.CreateClassAsync(seats: 3),
+            await _client.CreateClassAsync(seats: 7),
         };
 
         await RaceAsync(90, i => _client.PlaceHoldAsync(classes[i % classes.Length].Id, TestData.StudentId()));
@@ -75,7 +75,7 @@ public sealed class ConcurrencyTests(ApiFactory factory)
         foreach (var c in classes)
         {
             var after = await _client.GetClassAsync(c.Id);
-            Assert.Equal(c.Capacity, after.HeldSeats);
+            Assert.Equal(c.TotalSeats, after.HeldSeats);
             Assert.Equal(0, after.AvailableSeats);
         }
     }

@@ -9,8 +9,8 @@ internal sealed class ClassRepository(AdmissionDbContext db) : IClassRepository
 {
     public void Add(SchoolClass schoolClass) => db.Classes.Add(schoolClass);
 
-    public Task<bool> ExistsAsync(string normalizedName, Shift shift, CancellationToken ct) =>
-        db.Classes.AnyAsync(c => c.NormalizedName == normalizedName && c.Shift == shift, ct);
+    public Task<bool> ExistsAsync(string normalizedName, CancellationToken ct) =>
+        db.Classes.AnyAsync(c => c.NormalizedName == normalizedName, ct);
 
     public Task<SchoolClass?> GetAsync(Guid id, CancellationToken ct) =>
         db.Classes.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id, ct);
@@ -24,7 +24,7 @@ internal sealed class ClassRepository(AdmissionDbContext db) : IClassRepository
         WithUsage(db.Classes.Where(c => c.Id == id), now).FirstOrDefaultAsync(ct);
 
     public async Task<IReadOnlyList<ClassWithUsage>> ListWithUsageAsync(DateTimeOffset now, CancellationToken ct) =>
-        await WithUsage(db.Classes.OrderBy(c => c.Name).ThenBy(c => c.Shift), now).ToListAsync(ct);
+        await WithUsage(db.Classes.OrderBy(c => c.Name), now).ToListAsync(ct);
 
     /// <summary>Seat usage is always computed from the holds table, never cached.</summary>
     private IQueryable<ClassWithUsage> WithUsage(IQueryable<SchoolClass> query, DateTimeOffset now) =>

@@ -12,12 +12,12 @@ export function AdminPage() {
 
   const totals = (classes ?? []).reduce(
     (t, c) => ({
-      capacity: t.capacity + c.capacity,
+      total: t.total + c.totalSeats,
       confirmed: t.confirmed + c.confirmedSeats,
       held: t.held + c.heldSeats,
       available: t.available + c.availableSeats,
     }),
-    { capacity: 0, confirmed: 0, held: 0, available: 0 },
+    { total: 0, confirmed: 0, held: 0, available: 0 },
   )
 
   return (
@@ -32,7 +32,7 @@ export function AdminPage() {
 
         {classes && classes.length > 0 && (
           <dl className="stats">
-            <div><dt>Total seats</dt><dd>{totals.capacity}</dd></div>
+            <div><dt>Total seats</dt><dd>{totals.total}</dd></div>
             <div><dt>Admitted</dt><dd>{totals.confirmed}</dd></div>
             <div><dt>Held</dt><dd>{totals.held}</dd></div>
             <div><dt>Available</dt><dd>{totals.available}</dd></div>
@@ -50,8 +50,7 @@ export function AdminPage() {
               <thead>
                 <tr>
                   <th>Class</th>
-                  <th>Shift</th>
-                  <th className="num">Capacity</th>
+                  <th className="num">Total seats</th>
                   <th className="num">Admitted</th>
                   <th className="num">Held</th>
                   <th className="num">Available</th>
@@ -63,8 +62,7 @@ export function AdminPage() {
                 {classes.map((c) => (
                   <tr key={c.id} className={selected?.id === c.id ? 'selected' : undefined}>
                     <td>{c.name}</td>
-                    <td>{c.shift}</td>
-                    <td className="num">{c.capacity}</td>
+                    <td className="num">{c.totalSeats}</td>
                     <td className="num">{c.confirmedSeats}</td>
                     <td className="num">{c.heldSeats}</td>
                     <td className="num">{c.availableSeats}</td>

@@ -6,10 +6,10 @@ public static class ApiClientExtensions
 {
     public const string StudentHeader = "X-Student-Id";
 
-    public static async Task<ClassDto> CreateClassAsync(this HttpClient client, int capacity, string shift = "MORNING")
+    public static async Task<ClassDto> CreateClassAsync(this HttpClient client, int seats)
     {
         var response = await client.PostAsJsonAsync("/classes",
-            new { name = TestData.UniqueName(), shift, capacity });
+            new { name = TestData.UniqueName(), totalSeats = seats });
         response.EnsureSuccessStatusCode();
         return await response.ReadAsync<ClassDto>();
     }

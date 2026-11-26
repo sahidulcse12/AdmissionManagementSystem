@@ -2,48 +2,73 @@
 
 > Bangla version: [ASSUMPTIONS.bn.md](ASSUMPTIONS.bn.md)
 
-Decisions made where the requirements left room for interpretation.
+What I assumed where the brief was not explicit, and why.
 
-## Identity and access
+## Classes and shifts
 
-1. **Student id = 17-digit birth registration number.** Bangladesh birth registration numbers are
-   17 digits; the API accepts exactly 17 ASCII digits (surrounding spaces are trimmed).
-2. **No authentication**, as required. `X-Student-Id` is trusted as the caller's identity; ownership
-   checks compare it to the hold's student id on the backend.
-3. **Admin endpoints are open.** `POST /classes` and `GET /classes/{id}/holds` have no protection.
-   In production they would sit behind admin authentication.
-4. A missing or malformed `X-Student-Id` returns `400` (not `401`), because there is no
-   authentication scheme to challenge.
+1. **Each shift is a separate class** with its own name and `totalSeats`
+   (e.g. "Class 6 - Morning Shift", "Class 6 - Day Shift"), exactly as the brief describes. There is no
+   separate shift field. *Why:* keeps the API contract (`{ name, totalSeats }`) unchanged.
+2. **Class names are unique, case-insensitively.** Creating "class 6 - morning shift" when
+   "Class 6 - Morning Shift" exists returns `409`. *Why:* two classes with the same name would confuse parents.
+3. **`totalSeats` is a whole number from 1 to 10 000.** *Why:* zero or negative seats make no sense, and an
+   upper bound rejects typos such as `1200000`.
+4. **Classes cannot be edited or deleted.** Not required by the brief, and changing seats after admissions
+   started raises policy questions (what if seats drop below confirmed admissions?).
 
-## Admission rules
+## Identity
 
-5. **One active hold or admission per student per class.** The same student may hold seats in
-   different classes at the same time (the requirement only restricts the same class).
-6. **A confirmed admission cannot be cancelled** through `DELETE /holds/{id}` (`409`). Withdrawal
-   after admission is an administrative process outside this scope.
-7. **An expired hold cannot be cancelled** (`410`): its seat is already free.
-8. **Repeated cancel is a no-op** (`200`), mirroring idempotent confirmation.
-9. **Payment always succeeds.** "Pay & confirm" calls `POST /holds/{id}/confirm` directly.
-10. **Hold boundary:** a hold is valid while `now < expires_at`; at `expires_at` it is expired.
-11. **First-come-first-served** means the order in which requests acquire the class row lock in
-    PostgreSQL, i.e. arrival order at the database.
+5. **Student ID = exactly 17 ASCII digits** (Bangladesh birth registration number). Spaces around it are
+   trimmed; anything else is `400`.
+6. **A missing or malformed `X-Student-Id` is `400`, not `401`.** There is no login, so there is nothing to
+   authenticate against.
+7. **`GET /holds/{holdId}` works without `X-Student-Id`.** The contract lists the header for every other
+   student endpoint but not this one, so a request without it is answered. If the header *is* sent and
+   belongs to another student, the answer is `403`. Confirm, cancel and `/me/holds` always require it.
+8. **Admin actions are open** (creating classes, viewing a class's applications). The brief has no admin login.
 
-## Classes
+## Applications (holds)
 
-12. **Shifts** are `MORNING`, `DAY` and `EVENING`, common in Bangladeshi schools.
-13. Class names are unique **per shift, case-insensitively** ("Class 1" MORNING and "class 1" MORNING
-    conflict; "Class 1" DAY is allowed).
-14. **Capacity** is 1–1000 and is set when the class is created. Editing capacity or deleting classes
-    was not required and is not implemented.
+9. **One active application or admission per student per class** (as required). The same student may apply
+   to different classes, e.g. Morning and Day shift. *Why:* the brief only restricts "a class".
+10. **A hold is valid while `now < expiresAt`**; at `expiresAt` it is `EXPIRED`.
+11. **Expired seats are released without any API call.** Seat counts treat an overdue `HELD` hold as free
+    immediately; a background job also writes `EXPIRED` to the database every `EXPIRY_SWEEP_SECONDS` (15 s).
+12. **A confirmed admission cannot be cancelled** (`409`). *Why:* the fee has been paid; withdrawal would
+    be an office process, not a button.
+13. **Cancelling an already-cancelled hold returns `204` again**, mirroring idempotent confirmation.
+    Cancelling an expired hold returns `410` because its seat is already free.
+14. **Confirming an expired hold returns `410 Gone`; a cancelled one returns `409`.** Both are 4xx as required.
+15. **"First come, first served"** means the order in which requests obtain the class row lock in PostgreSQL,
+    i.e. arrival order at the database.
+16. **Payment always succeeds** — "Pay admission fee" calls confirm directly.
+
+## Bonus: two backend processes on one database
+
+Running two backend processes (e.g. ports 8080 and 8081) on the same PostgreSQL still keeps
+`held + confirmed ≤ totalSeats`. Nothing relies on in-memory state; every rule is enforced by the database:
+
+- **Seat check and insert are serialised per class in PostgreSQL.** A new hold runs in a transaction that
+  first takes `SELECT … FROM classes WHERE id = $1 FOR UPDATE`. A second process asking for the same class
+  waits on that row lock until the first commits, then counts the seats again. The lock lives in the
+  database, so it works across any number of processes.
+- **Partial unique index** `(class_id, student_id) WHERE status IN ('HELD','CONFIRMED')` makes a second
+  active application for the same student impossible even if two processes race.
+- **Confirm/cancel lock the hold row** (`SELECT … FOR UPDATE`), so confirming the same hold through two
+  processes counts it once.
+- **Seat counts are computed from the `holds` table on every request**, never cached per process.
+- **Migrations** run at startup with retries, so two processes starting together converge safely.
+
+Verified by `MultiInstanceTests` (two separate hosts, one database, 60 parallel requests for 7 seats →
+exactly 7 holds) and manually with `docker compose --profile multi up` (API on 8080 and 8081).
 
 ## Technical
 
-15. **.NET 9** is used (the requirement says .NET 8 or newer).
-16. **Seat counts are computed, not stored**, so they can never drift from the holds table.
-17. **Background sweep interval** defaults to 15 s (`EXPIRY_SWEEP_SECONDS`). Correctness does not
-    depend on it; it only keeps stored statuses tidy.
-18. **Timestamps** are truncated to microseconds to match PostgreSQL precision.
-19. **CORS** defaults to `*` for local use; set `CORS_ORIGINS` to restrict it.
-20. **UI refresh** is polling every 5 seconds (only while the tab is visible) rather than WebSockets —
-    simpler and sufficient for this scale.
-21. The UI is in English; the documentation is in English and Bangla.
+17. **.NET 9** (the brief says .NET 8 or newer).
+18. **Timestamps are truncated to microseconds** to match PostgreSQL, so a response right after a write equals
+    the same record read later.
+19. **UI refreshes by polling every 5 seconds** (only while the tab is visible). *Why:* simpler than
+    WebSockets and enough for "updates every few seconds".
+20. **The student ID is remembered in `localStorage`**; running applications are always re-read from
+    `GET /me/holds`, so the backend stays the source of truth after a refresh or browser restart.
+21. **UI labels are English with the brief's Bangla terms** ("আবেদন করুন", "ভর্তি ফি দিন", "বাতিল").

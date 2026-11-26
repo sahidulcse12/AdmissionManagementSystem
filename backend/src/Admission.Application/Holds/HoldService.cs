@@ -36,7 +36,7 @@ public sealed class HoldService(
             if (existing is not null) throw AlreadyActive(existing.Status);
 
             var occupied = await holds.CountOccupiedSeatsAsync(classId, now, token);
-            if (occupied >= schoolClass.Capacity)
+            if (occupied >= schoolClass.TotalSeats)
                 throw new ConflictException("NO_SEATS_AVAILABLE", "No seats are available in this class.");
 
             var hold = Hold.Place(classId, studentId, now, options.HoldDuration);
@@ -84,11 +84,15 @@ public sealed class HoldService(
         }, ct);
     }
 
+    /// <summary>
+    /// Reads a hold's current status. The contract does not require <c>X-Student-Id</c> here, so a
+    /// request without it is answered; when the header is present it must belong to the owner.
+    /// </summary>
     public async Task<HoldResponse> GetAsync(Guid holdId, string? rawStudentId, CancellationToken ct)
     {
-        var studentId = StudentId.Parse(rawStudentId);
+        var studentId = string.IsNullOrWhiteSpace(rawStudentId) ? null : StudentId.Parse(rawStudentId);
         var item = await holds.GetAsync(holdId, ct) ?? throw NotFound();
-        EnsureOwner(item.Hold, studentId);
+        if (studentId is not null) EnsureOwner(item.Hold, studentId);
         return HoldResponse.From(item, clock.Now());
     }
 

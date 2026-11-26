@@ -1,13 +1,10 @@
-export type Shift = 'MORNING' | 'DAY' | 'EVENING'
-export const SHIFTS: Shift[] = ['MORNING', 'DAY', 'EVENING']
-
 export type HoldStatus = 'HELD' | 'CONFIRMED' | 'EXPIRED' | 'CANCELLED'
 
+/** A class. Each shift is its own class, e.g. "Class 6 - Morning Shift". */
 export interface SchoolClass {
   id: string
   name: string
-  shift: Shift
-  capacity: number
+  totalSeats: number
   heldSeats: number
   confirmedSeats: number
   availableSeats: number
@@ -16,15 +13,13 @@ export interface SchoolClass {
 
 export interface CreateClassInput {
   name: string
-  shift: Shift
-  capacity: number
+  totalSeats: number
 }
 
 export interface Hold {
-  id: string
+  holdId: string
   classId: string
   className: string
-  shift: Shift
   studentId: string
   status: HoldStatus
   createdAt: string

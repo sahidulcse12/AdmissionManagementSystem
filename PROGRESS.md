@@ -4,89 +4,80 @@
 
 ## Current status
 
-- **Current phase:** All features complete; final verification on `develop`, then merge into `main`
-- **Current branch:** `feature/testing-and-documentation` → merging into `develop`
+- **Phase:** Complete — all requirements of the brief implemented and verified; `develop` merged into `main`
 - **Backend architecture:** Clean Architecture (`Domain` → `Application` → `Infrastructure` → `Api`)
 - **Pending features:** none
-- **Next action:** none — final merge hashes are listed under *Final integration* below and in `git log`
+- **Commit hashes:** see `git log --oneline --graph --all` (hashes are not copied here so this file
+  stays correct if history is ever rewritten)
 
-## Feature branches
+## Git workflow
 
-All feature branches were created from the latest `develop` and merged back with `--no-ff`.
+`main → develop → feature/* → develop → main`. Every feature branch was created from the latest
+`develop`, built in small task-sized commits, and merged back with `--no-ff`.
 
-| # | Branch | Status | Feature commits | Merge into `develop` |
-|---|---|---|---|---|
-| 1 | `feature/project-setup` | Done | `03a3853`, `1c104b5`, `0ebe29b`, `3585ae0`, `b032521` | `b32c602` |
-| 2 | `feature/database-and-class-management` | Done | `ba02a60`, `e3ff39c`, `f5f9134`, `d507856`, `97128ac` | `2af83aa` |
-| 3 | `feature/seat-availability-and-hold` | Done | `a748e5c`, `3937cbd`, `cac6b08`, `050f21e`, `cf7ba54`, `7ccc2ac` | `51af863` |
-| 4 | `feature/admission-confirmation-and-cancellation` | Done | `6878a9a`, `0e2240d`, `c454a1d`, `0502091` | `5251875` |
-| — | `develop` (integration fix) | Done | `40591d2` fix: truncate timestamps to PostgreSQL precision | direct on `develop` |
-| 5 | `feature/frontend-admin` | Done | `258daee`, `ff3a7e5`, `56b3e9a`, progress commit | `804d9f5` |
-| 6 | `feature/frontend-parent` | Done | `3bbb3b4`, `39ba60e`, `f5c445c` | `106423d` |
-| 7 | `feature/testing-and-documentation` | Done | `01ca03b`, `41b3b77`, `269b7fd`, `8ed0691`, `5fda5bd`, this progress commit | see *Final integration* |
-
-Base commit on `main`: `41838aa` (initial repository setup).
-
-## Completed features
-
-- Class management with shift and capacity (`POST/GET /classes`, `GET /classes/{id}`)
-- First-come-first-served seat holds with configurable duration (`POST /classes/{id}/holds`)
-- Hold expiry (read-time + background sweeper), hold reads and history (`GET /holds/{id}`, `GET /me/holds`)
-- Idempotent confirmation and cancellation with ownership checks (`POST /holds/{id}/confirm`, `DELETE /holds/{id}`)
-- Admin view of a class's holds (`GET /classes/{id}/holds`)
-- Admin UI and parent/guardian UI with live seats, countdown, history and persistence across reloads
-- Docker Compose stack with PostgreSQL volume, health checks and automatic migrations
-- English and Bangla documentation
-
-## Tests executed
-
-| When | Command | Result |
+| # | Branch | What it delivered |
 |---|---|---|
-| Project setup | `dotnet build` (backend) | Passed, 0 errors |
-| Project setup | `npm run build` (frontend) | Passed |
-| Project setup | `docker compose config -q` | Valid |
-| Class management | `dotnet test` (Testcontainers PostgreSQL 16) | 12 passed, 0 failed |
-| Seat holds | `dotnet test` | 31 passed, 0 failed |
-| Seat holds | `ConcurrencyTests` repeated 3× | 4/4 passed each run |
-| Seat holds (on `develop` after merge) | `dotnet test` | 31 passed, 0 failed |
-| Confirmation & cancellation | `dotnet test` | 56 passed, 0 failed |
-| After merge on `develop` | `dotnet test` | 2 failed (timestamp precision bug) → fixed in `40591d2`, then 56 passed ×3 |
-| Admin interface | `npm test`, `npm run lint`, `npm run build` | 6 passed, lint clean, build OK |
-| Parent interface | `npm test`, `npm run lint`, `npm run build` | 19 passed, lint clean, build OK |
+| 1 | `feature/project-setup` | .NET and React scaffolds, Docker Compose, `.env.example`, plan |
+| 2 | `feature/database-and-class-management` | Clean Architecture layers, EF Core + migration, class API, tests |
+| 3 | `feature/seat-availability-and-hold` | Row-locked seat holds, expiry sweeper, hold queries, concurrency tests |
+| 4 | `feature/admission-confirmation-and-cancellation` | Idempotent confirm, cancel, ownership checks, race tests |
+| — | `develop` (integration fix) | Timestamp precision fix found while re-testing after a merge |
+| 5 | `feature/frontend-admin` | API client, admin screens, tests |
+| 6 | `feature/frontend-parent` | Parent screens, countdown, history, persistence, tests |
+| 7 | `feature/testing-and-documentation` | Docker end-to-end verification, English and Bangla docs |
+| 8 | `feature/api-contract-alignment` | Exact API contract (`totalSeats`, `holdId`, `204`), each shift as a class, student ID box at the top, two-backend bonus, `ContractTests`, `MultiInstanceTests` |
 
-## Docker end-to-end verification (`docker compose up --build`)
+## Requirement checklist (brief §1.3–§1.7)
+
+| Requirement | Status | Evidence |
+|---|---|---|
+| Each shift is a separate class with its own seats | ✅ | `POST /classes { name, totalSeats }` |
+| Student ID box at the top of the page; no login | ✅ | `StudentIdBar`, `App.test.tsx` |
+| Screens: create class, class list, application, my applications | ✅ | Admin and Parent pages |
+| API contract: 8 endpoints, field names, 201/200/204/409 | ✅ | `ContractTests`, manual `curl` on Docker |
+| `held + confirmed ≤ totalSeats` under any concurrency | ✅ | `ConcurrencyTests`, 30 and 60 parallel `curl` |
+| Hold duration from `HOLD_DURATION_SECONDS` (default 600); auto release | ✅ | Expiry tests; Docker run with 5 s |
+| One active application/admission per student per class | ✅ | Partial unique index + tests |
+| Only own, unexpired `HELD` holds can be confirmed | ✅ | `403` / `410` / `409` tests |
+| Repeated confirm increases `confirmedSeats` once | ✅ | `Parallel_confirmations_of_one_hold_produce_one_admission` |
+| Data survives restart and `docker compose down` / `up` | ✅ | Manual check (volume `pgdata`) |
+| Bad input → 4xx, never 500 | ✅ | Validation and malformed-body tests |
+| Everything doable from the UI | ✅ | Admin + Parent pages |
+| Expiry shows EXPIRED and disables "Pay" without reload | ✅ | `ParentPage.test.tsx` |
+| Seat counts refresh every few seconds | ✅ | 5 s polling |
+| Running application visible after refresh / browser restart | ✅ | `App.test.tsx` |
+| Readable errors (no seats, expired, bad input, server down) | ✅ | Frontend tests |
+| Bonus: two backend processes on one database | ✅ | `MultiInstanceTests`, `docker compose --profile multi` |
+| Bonus: frontend automated tests | ✅ | 21 Vitest tests |
+| README, ASSUMPTIONS, AI_USAGE, Dockerfiles, compose | ✅ | Repository root |
+| ≥ 3 backend tests incl. a concurrency test | ✅ | 63 tests |
+
+## Tests executed (latest)
+
+| Command | Result |
+|---|---|
+| `dotnet test` (Testcontainers PostgreSQL 16) | 63 passed, 0 failed |
+| Concurrency + multi-instance tests repeated 3× | 10/10 passed each run |
+| `npm test` | 21 passed |
+| `npm run lint` / `npm run build` | clean / OK |
+
+Earlier runs: 12 → 31 → 56 backend tests as features landed. After merging feature 4, two tests failed
+on `develop` (timestamp precision bug); fixed, then 56 passed three times in a row.
+
+## Docker end-to-end verification
 
 | Check | Result |
 |---|---|
-| `db`, `api` healthy; `web` up | ✅ |
-| Migrations applied on startup (`InitialClasses`, `AddHolds`) | ✅ |
-| Create class → hold → confirm via HTTP | ✅ `201`, `HELD` (600 s), `CONFIRMED` |
-| Duplicate hold by same student | ✅ `409` |
-| Other student confirms someone's hold | ✅ `403 HOLD_NOT_OWNED` |
-| Confirm twice | ✅ `200`, identical `confirmedAt` |
-| Missing `X-Student-Id` / malformed id | ✅ `400 MISSING_STUDENT_ID` / `400 INVALID_ID` |
-| 30 parallel `curl` holds for 3 seats | ✅ 3 × `201`, 27 × `409`; 3 active rows in DB |
-| `docker compose down` + `up` | ✅ classes and confirmed admission still present (volume persisted) |
-| `HOLD_DURATION_SECONDS=5 EXPIRY_SWEEP_SECONDS=2` | ✅ hold `remainingSeconds: 5`; DB row `EXPIRED` after 8 s; confirm → `410`; seat available again |
-| Frontend served, `config.js` generated from `API_URL`, SPA fallback | ✅ |
-| CORS preflight allows `X-Student-Id` | ✅ |
-
-## Final integration
-
-Recorded after the last feature merge — see [Final integration on `develop`](#final-integration-on-develop) below.
+| `docker compose --profile multi up --build`: `db`, `api` healthy; `api2`, `web` up | ✅ |
+| Migration on a database with old data folds shift into the class name; confirmed admission kept | ✅ |
+| All 8 contract endpoints via `curl` | ✅ `201`, `200`, `200`, `201`, `200` (no header), `200`, `204` (empty body), `200` |
+| Wrong inputs (`{bad`, `totalSeats:"a"`, empty name, missing seats) | ✅ all `400` |
+| 30 parallel `curl` holds for 3 seats (one API) | ✅ 3 × `201`, 27 × `409` |
+| 60 parallel `curl` holds for 5 seats split across ports 8080 and 8081 | ✅ 5 × `201`, 55 × `409`; both APIs report 5 held |
+| `docker compose down` + `up` | ✅ data still present |
+| `HOLD_DURATION_SECONDS=5 EXPIRY_SWEEP_SECONDS=2` | ✅ DB row `EXPIRED` after 8 s; confirm → `410`; seat free again |
 
 ## Known issues
 
-- None open. Resolved: responses returned right after a write had 100 ns precision while
-  later reads had PostgreSQL's microsecond precision, breaking idempotent confirm responses (`40591d2`).
-- Limitations by design are listed in [README.md](README.md#known-limitations) and [ASSUMPTIONS.md](ASSUMPTIONS.md).
-
-## Final integration on `develop`
-
-| Step | Result |
-|---|---|
-| `feature/testing-and-documentation` → `develop` | merge `ba959eb` |
-| Backend `dotnet build` / `dotnet test` on `develop` | 0 warnings, 0 errors / 56 passed, 0 failed |
-| Frontend `npm test` / `npm run lint` / `npm run build` on `develop` | 19 passed / clean / OK |
-| `docker compose up -d --build` from `develop` + smoke test | all services up, hold → confirm → `CONFIRMED`, full class → `409`, UI `200` |
-| `develop` → `main` | merged with `--no-ff` after this commit; hash: `git log main -1` |
+- None open. Limitations by design are listed in [README.md](README.md#known-limitations) and
+  [ASSUMPTIONS.md](ASSUMPTIONS.md).

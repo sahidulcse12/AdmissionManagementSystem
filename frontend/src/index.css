@@ -109,3 +109,16 @@ tr.selected td { background: #f3f7fd; }
 .hold-card.urgent .countdown { color: var(--danger); }
 .hold-actions { grid-column: 1 / -1; display: flex; gap: 10px; flex-wrap: wrap; }
 .hold-card .alert { grid-column: 1 / -1; margin-top: 0; }
+
+.student-row { padding-block: 0 12px; }
+.student-box { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; width: 100%; }
+.student-box .student-label { flex: 1 1 260px; }
+.student-box > .muted { align-self: center; }
+.small-btn { padding: 4px 10px; font-size: 0.85rem; }
+.field-error { width: 100%; margin: 0; color: var(--danger); font-size: 0.88rem; }
+.seat-facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 0; }
+.seat-facts div { background: var(--bg); border-radius: 6px; padding: 6px; text-align: center; }
+.seat-facts dt { font-size: 0.72rem; color: var(--muted); }
+.seat-facts dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.seat-facts .free dd { color: var(--confirmed); }
+.seat-facts .full dd { color: var(--danger); }
