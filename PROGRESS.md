@@ -4,9 +4,9 @@
 
 ## Current status
 
-- **Current phase:** Seat availability and holds complete
-- **Current branch:** `feature/seat-availability-and-hold` → merging into `develop`
-- **Next action:** Create `feature/admission-confirmation-and-cancellation` from `develop`
+- **Current phase:** Backend core complete (confirmation and cancellation done)
+- **Current branch:** `feature/admission-confirmation-and-cancellation` → merging into `develop`
+- **Next action:** Create `feature/frontend-admin` from `develop`
 - **Backend architecture:** Clean Architecture (`Domain` → `Application` → `Infrastructure` → `Api`)
 
 ## Feature branches
@@ -14,9 +14,9 @@
 | # | Branch | Status | Feature commits | Merge into `develop` |
 |---|---|---|---|---|
 | 1 | `feature/project-setup` | Done | `03a3853`, `1c104b5`, `0ebe29b`, `3585ae0`, `b032521` | `b32c602` |
-| 2 | `feature/database-and-class-management` | Done | `ba02a60`, `e3ff39c`, `f5f9134`, `d507856`, `08b0f0a` | `2af83aa` |
-| 3 | `feature/seat-availability-and-hold` | Done | `a748e5c`, `3937cbd`, `cac6b08`, `050f21e`, `cf7ba54` | recorded in next update |
-| 4 | `feature/admission-confirmation-and-cancellation` | Pending | | |
+| 2 | `feature/database-and-class-management` | Done | `ba02a60`, `e3ff39c`, `f5f9134`, `d507856`, `97128ac` | `2af83aa` |
+| 3 | `feature/seat-availability-and-hold` | Done | `a748e5c`, `3937cbd`, `cac6b08`, `050f21e`, `cf7ba54`, `7ccc2ac` | `51af863` |
+| 4 | `feature/admission-confirmation-and-cancellation` | Done | `6878a9a`, `0e2240d`, `c454a1d` | recorded in next update |
 | 5 | `feature/frontend-admin` | Pending | | |
 | 6 | `feature/frontend-parent` | Pending | | |
 | 7 | `feature/testing-and-documentation` | Pending | | |
@@ -33,6 +33,8 @@ Base commit on `main`: `41838aa` (initial repository setup).
 | Class management | `dotnet test` (Testcontainers PostgreSQL 16) | 12 passed, 0 failed |
 | Seat holds | `dotnet test` | 31 passed, 0 failed |
 | Seat holds | `ConcurrencyTests` repeated 3× | 4/4 passed each run |
+| Seat holds (on `develop` after merge) | `dotnet test` | 31 passed, 0 failed |
+| Confirmation & cancellation | `dotnet test` | 56 passed, 0 failed |
 
 ## Known issues
 

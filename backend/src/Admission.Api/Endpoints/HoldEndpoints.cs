@@ -30,6 +30,20 @@ public static class HoldEndpoints
             CancellationToken ct) =>
             Results.Ok(await service.GetAsync(RouteIds.Parse(holdId, "hold id"), studentId, ct)));
 
+        app.MapPost("/holds/{holdId}/confirm", async (
+            string holdId,
+            [FromHeader(Name = StudentHeader)] string? studentId,
+            HoldService service,
+            CancellationToken ct) =>
+            Results.Ok(await service.ConfirmAsync(RouteIds.Parse(holdId, "hold id"), studentId, ct)));
+
+        app.MapDelete("/holds/{holdId}", async (
+            string holdId,
+            [FromHeader(Name = StudentHeader)] string? studentId,
+            HoldService service,
+            CancellationToken ct) =>
+            Results.Ok(await service.CancelAsync(RouteIds.Parse(holdId, "hold id"), studentId, ct)));
+
         app.MapGet("/me/holds", async (
             [FromHeader(Name = StudentHeader)] string? studentId,
             HoldService service,
