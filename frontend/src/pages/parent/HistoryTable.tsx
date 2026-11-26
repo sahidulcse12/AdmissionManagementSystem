@@ -11,27 +11,28 @@ function outcomeTime(h: Hold): string {
   }
 }
 
+/** "My applications": every application of this student and its status. */
 export function HistoryTable({ holds }: { holds: Hold[] }) {
-  if (!holds.length) return <Empty>No reservations yet.</Empty>
+  if (!holds.length) return <Empty>No applications yet.</Empty>
   return (
     <div className="table-wrap">
       <table>
         <thead>
           <tr>
             <th>Class</th>
-            <th>Shift</th>
             <th>Status</th>
-            <th>Reserved at</th>
+            <th>Applied at</th>
+            <th>Expires at</th>
             <th>Completed / ended</th>
           </tr>
         </thead>
         <tbody>
           {holds.map((h) => (
-            <tr key={h.id}>
+            <tr key={h.holdId}>
               <td>{h.className}</td>
-              <td>{h.shift}</td>
               <td><StatusBadge status={h.status} /></td>
               <td>{formatDateTime(h.createdAt)}</td>
+              <td>{formatDateTime(h.expiresAt)}</td>
               <td>{outcomeTime(h)}</td>
             </tr>
           ))}
