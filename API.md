@@ -1,7 +1,5 @@
 # API Reference
 
-> Bangla version: [API.bn.md](API.bn.md)
-
 Base URL: `http://localhost:8080`. All requests and responses are JSON. Timestamps are ISO-8601 UTC.
 Responses contain every field required by the assignment contract; a few extra fields are added
 (allowed by the contract) to help the UI.

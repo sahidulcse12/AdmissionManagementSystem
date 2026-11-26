@@ -1,7 +1,5 @@
 # Architecture
 
-> Bangla version: [ARCHITECTURE.bn.md](ARCHITECTURE.bn.md)
-
 ## System overview
 
 ```mermaid
