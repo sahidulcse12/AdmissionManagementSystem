@@ -29,6 +29,7 @@
 | — | `fix/sweeper-graceful-shutdown` | বন্ধের সময় expiry sweeper শান্তভাবে থামে; Docker-এর পাশাপাশি local-এ চালানোর নিয়ম README-তে |
 | — | `chore/remove-doc-comments` | XML doc / JSDoc কমেন্ট মোছা |
 | ৯ | `feature/swagger-and-api-versioning` | `/swagger`-এ Swagger UI, header/query দিয়ে API versioning (ডিফল্ট 1.0), টেস্ট |
+| ১০ | `feature/controllers` | HTTP স্তর ASP.NET Core controller-এ (`ClassesController`, `ClassHoldsController`, `HoldsController`, `MeController`); contract অপরিবর্তিত |
 
 ## প্রয়োজনীয়তার তালিকা (brief §১.৩–§১.৭)
 

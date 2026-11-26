@@ -28,7 +28,7 @@ Each shift is its own class, e.g. "Class 6 - Morning Shift" and "Class 6 - Day S
 
 | Layer | Technology |
 |---|---|
-| Backend | C# · .NET 9 · ASP.NET Core Minimal APIs · EF Core 9 · Clean Architecture |
+| Backend | C# · .NET 9 · ASP.NET Core Web API (controllers) · EF Core 9 · Clean Architecture |
 | Database | PostgreSQL 16 |
 | Frontend | React 19 · TypeScript · Vite |
 | Tests | xUnit · Testcontainers (real PostgreSQL) · Vitest · Testing Library |
@@ -176,7 +176,7 @@ docker run --rm -v "$PWD/frontend:/app" -w /app node:22-alpine sh -c "npm ci && 
 │   ├── src/Admission.Domain/          # entities, state machine, rules
 │   ├── src/Admission.Application/     # use cases, DTOs, repository interfaces
 │   ├── src/Admission.Infrastructure/  # EF Core, PostgreSQL, migrations, expiry job
-│   ├── src/Admission.Api/             # endpoints, error middleware, startup
+│   ├── src/Admission.Api/             # controllers, error middleware, Swagger, versioning, startup
 │   └── tests/Admission.Tests/         # unit + integration + concurrency tests
 ├── frontend/                          # React + TypeScript (Vite), nginx image
 ├── docker-compose.yml
