@@ -75,6 +75,20 @@ This also starts `api2` on http://localhost:8081, sharing the same PostgreSQL. B
 once; `held + confirmed` still never exceeds `totalSeats`. How this is guaranteed is explained in
 [ASSUMPTIONS.md](ASSUMPTIONS.md#bonus-two-backend-processes-on-one-database).
 
+### Running the backend or frontend locally (development)
+
+Docker's `api` container already listens on port 8080, so a backend started from Visual Studio /
+`dotnet run` on the same port fails with *"address already in use"*. Keep only the database in Docker:
+
+```bash
+docker compose stop api api2 web     # free ports 8080/8081/5173, keep PostgreSQL running
+cd backend && dotnet run --project src/Admission.Api        # http://localhost:8080
+cd frontend && npm run dev                                  # http://localhost:5173
+```
+
+The local backend connects to `Host=localhost;Port=5432;Database=admission;Username=admission;Password=admission`
+by default (the Docker database). Override with the `DATABASE_URL` environment variable if needed.
+
 ## Configuration
 
 All settings are environment variables (see [.env.example](.env.example)).

@@ -19,9 +19,14 @@ internal sealed class HoldExpirySweeper(
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var timer = new PeriodicTimer(options.SweepInterval);
-        while (await timer.WaitForNextTickAsync(stoppingToken))
+        while (!stoppingToken.IsCancellationRequested)
         {
+            // Wait for the next sweep. SuppressThrowing makes shutdown end the wait quietly instead of
+            // throwing OperationCanceledException (which the debugger would otherwise break on).
+            await Task.Delay(options.SweepInterval, stoppingToken)
+                .ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+            if (stoppingToken.IsCancellationRequested) break;
+
             try
             {
                 await using var scope = scopes.CreateAsyncScope();
@@ -29,7 +34,11 @@ internal sealed class HoldExpirySweeper(
                 var expired = await holds.ExpireOverdueAsync(clock.GetUtcNow(), stoppingToken);
                 if (expired > 0) logger.LogInformation("Expired {Count} overdue hold(s).", expired);
             }
-            catch (Exception ex) when (ex is not OperationCanceledException)
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break; // Application is shutting down mid-sweep; nothing to do.
+            }
+            catch (Exception ex)
             {
                 logger.LogWarning(ex, "Hold expiry sweep failed; will retry on next tick.");
             }
